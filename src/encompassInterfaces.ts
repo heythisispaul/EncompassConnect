@@ -1,8 +1,9 @@
 export interface PipeLineContract {
-    filter: {
+    filter?: {
       operator: "and" | "or";
       terms: PipeLineTerms[];
     },
+    loanGuids?: string[];
     sortOrder?: sortOrderContract[];
     fields: string[];
   }
@@ -19,8 +20,17 @@ export interface PipeLineContract {
     order: "asc" | "desc";
   }
 
+  export interface LoanAssociateProperties {
+    loanAssociateType: "user" | "group";
+    id: string;
+    phone?: string;
+    cellphone?: string;
+    fax?: string;
+    email?: string;
+  }
+
   export interface MilestoneLogContract {
-      loanAssociateType: string;
+      loanAssociateType: "user" | "group";
       userId: string;
       comments?: string;
       startDate?: Date;

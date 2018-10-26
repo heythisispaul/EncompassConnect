@@ -1,5 +1,6 @@
 import * as request from 'request';
-import { PipeLineContract, MilestoneLogContract } from './encompassInterfaces';
+import { PipeLineContract, MilestoneLogContract, LoanAssociateProperties } from './encompassInterfaces';
+import { RequestOptions } from 'https';
 
 export default class EncompassConnect {
     clientId: string;
@@ -14,23 +15,42 @@ export default class EncompassConnect {
         this.token = '';
     }
 
-    private callInfo = (method: string, token: string, body?: any): any => {
-        let options: any = {
-            method: method,
-            headers: {
-                "Authorization": 'Bearer ' + token
-            },
-            dataType: 'text',
-            contentType: 'application/x-www-form-urlencoded',
-            json: true
-        };
-        if (body) {
-            options.body = body;
+    private utils = {
+        callInfo: (method: string, body?: any): RequestOptions => {
+            let options: any = {
+                method: method,
+                headers: {
+                    "Authorization": 'Bearer ' + this.token
+                },
+                dataType: 'text',
+                contentType: 'application/x-www-form-urlencoded',
+                json: true
+            };
+            if (body) {
+                options.body = body;
+            }
+            return options;
+        },
+        getMilestoneId: (GUID: string, milestone: string): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                let milestoneId: string = '';
+                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    try {
+                        milestoneId = body.filter((ms: any) => ms.milestoneName == milestone)[0].id;
+                        resolve(milestoneId);
+                    }
+                    catch {
+                        reject('Could not find milestone ID based off milestone/loan provided. Ensure the milestone entered matches the milestone name in Encompass.');
+                    }
+                });
+            })
         }
-        return options;
     }
 
-    authenticate = (username: string, password: string): Promise<string> => {
+    authenticate = (username: string, password: string): Promise<request.RequestResponse> => {
         let auth = "Basic " + Buffer.from(this.clientId + ":" + this.APIsecret).toString('base64');
         let dataString = `grant_type=password&username=${username}@encompass:${this.instanceId}&password=${password}`;
         return new Promise((resolve, reject) => {
@@ -49,20 +69,16 @@ export default class EncompassConnect {
                     reject(err);
                 }
                 if (response.body.access_token) {
-                    resolve(response.body.access_token);
+                    this.token = response.body.access_token;
+                    resolve(response);
                 }
                 reject('Token request was not rejected - however no token was returned');
             });
         });
     }
 
-    //call immediately after retreiving/updating token to store to the instance.
-    storeToken = (token: string) => {
-        this.token = token;
-    }
-
     getGuid = (loanNumber: string): Promise<string> => {
-        let options = this.callInfo('POST', this.token, {
+        let options = this.utils.callInfo('POST', {
             "filter": {
                 "operator": "and",
                 "terms": [{
@@ -95,10 +111,14 @@ export default class EncompassConnect {
         });
     }
 
-    pipeLineView = (options: PipeLineContract): Promise<any> => {
-        let requestOptions = this.callInfo('POST', this.token, options);
+    pipeLineView = (options: PipeLineContract, limit?: number): Promise<request.RequestResponse> => {
+        let requestOptions = this.utils.callInfo('POST', options);
+        let uri = 'https://api.elliemae.com/encompass/v1/loanPipeline/';
+        if (limit) {
+            uri += `?limit=${limit.toString()}`;
+        }
         return new Promise((resolve, reject) => {
-            request('https://api.elliemae.com/encompass/v1/loanPipeline/', requestOptions, (err, response) => {
+            request(uri, requestOptions, (err, response) => {
                 if (err) {
                     reject(err);
                 }
@@ -108,7 +128,7 @@ export default class EncompassConnect {
     }
 
     //loan CRUD
-    getLoan = (GUID: string, loanEntities?: string[]): Promise<any> => {
+    getLoan = (GUID: string, loanEntities?: string[]): Promise<request.RequestResponse> => {
         let uri = `https://api.elliemae.com/encompass/v1/loans/${GUID}`;
         if (loanEntities) {
             uri += '?entities=';
@@ -118,23 +138,7 @@ export default class EncompassConnect {
             uri = uri.substring(0, uri.length - 1);
         }
         return new Promise((resolve, reject) => {
-            request(uri, this.callInfo('GET', this.token), (err, response, body) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(body);
-            });
-        });
-    }
-
-    //untested as of 10/24
-    updateLoan = (GUID: string, loanData: any, loanTemplate?: string): Promise<any> => {
-        let uri = `https://api.elliemae.com/encompass/v1/loans/loanId/${GUID}?appendData=true`;
-        if (loanTemplate) {
-            uri += '?loanTemplate=' + loanTemplate;
-        }
-        return new Promise((resolve, reject) => {
-            request(uri, this.callInfo('PATCH', this.token, loanData), (err, response, body) => {
+            request(uri, this.utils.callInfo('GET'), (err, response) => {
                 if (err) {
                     reject(err);
                 }
@@ -143,9 +147,25 @@ export default class EncompassConnect {
         });
     }
 
-    deleteLoan = (GUID: string): Promise<any> => {
+    //untested as of 10/24
+    updateLoan = (GUID: string, loanData: any, loanTemplate?: string): Promise<request.RequestResponse> => {
+        let uri = `https://api.elliemae.com/encompass/v1/loans/loanId/${GUID}?appendData=true`;
+        if (loanTemplate) {
+            uri += '?loanTemplate=' + loanTemplate;
+        }
         return new Promise((resolve, reject) => {
-            request(`https://api.elliemae.com/encompass/v1/loans/${GUID}`, this.callInfo('DELETE', this.token), (err, response, body) => {
+            request(uri, this.utils.callInfo('PATCH', loanData), (err, response, body) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(response.body);
+            });
+        });
+    }
+
+    deleteLoan = (GUID: string): Promise<request.RequestResponse> => {
+        return new Promise((resolve, reject) => {
+            request(`https://api.elliemae.com/encompass/v1/loans/${GUID}`, this.utils.callInfo('DELETE'), (err, response, body) => {
                 if (err) {
                     reject(err);
                 }
@@ -158,61 +178,60 @@ export default class EncompassConnect {
     //end loan CRUD
 
     //untested as of 10/24
-    //assigns a started date, user, and adds comments to a specified milestone within a loan.
-    updateMilestone = (GUID: string, milestone: string, updateTerms: MilestoneLogContract): Promise<any> => {
+    assignUserToMilestone = (GUID: string, milestone: string, userProperties: LoanAssociateProperties): Promise<request.RequestResponse> => {
         return new Promise((resolve, reject) => {
-            let milestoneId: string = '';
-            request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones`, this.callInfo('GET', this.token), (err, response, body) => {
-                if (err) {
-                    reject(err);
-                }
-                try {
-                    milestoneId = body.filter((ms: any) => ms.milestoneName == milestone)[0].id;
-                }
-                catch {
-                    reject('Could not find milestone ID based off milestone/loan provided. Ensure the milestone entered matches the milestone name in Encompass.');
-                }
-                let options: any = {
-                    startDate: updateTerms.startDate ? updateTerms.startDate : new Date(),
-                    loanAssociate: {
-                        loanAssociateType: updateTerms.loanAssociateType,
-                        userId: updateTerms.userId
-                    }
-                };
-                if (updateTerms.comments) {
-                    options.comments = updateTerms.comments;
-                }
-                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/associates/${milestoneId}`, this.callInfo('PATCH', this.token, options), (err, response, body) => {
+            this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
                     if (err) {
                         reject(err);
                     }
                     resolve(response);
                 });
+            })
+            .catch((err) => {
+                reject(err);
             });
         });
     }
 
     //also currently untested (10/24)
-    completeMilestone = (GUID: string, milestone: string) => {
+    completeMilestone = (GUID: string, milestone: string): Promise<request.RequestResponse> => {
         return new Promise((resolve, reject) => {
-            let milestoneId: string = '';
-            request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones`, this.callInfo('GET', this.token), (err, response, body) => {
-                if (err) {
-                    reject(err);
-                }
-                try {
-                    milestoneId = body.filter((ms: any) => ms.milestoneName == milestone)[0].id;
-                }
-                catch {
-                    reject('Could not find milestone ID based off milestone/loan provided. Ensure the milestone entered matches the milestone name in Encompass.');
-                }
-                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones/${milestoneId}?action=finish`, this.callInfo('PATCH', this.token), (err, response, body) => {
+            this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response, body) => {
                     if (err) {
                         reject(err);
                     }
                     resolve(response);
                 });
+            })
+            .catch((err) => {
+                reject(err);
             });
-        })
+        });
+    }
+
+    //this not right maybe? still needs tests ran 10-26
+    updateRoleFreeMilestone = (GUID: string, milestone: string, updateInfo: LoanAssociateProperties): Promise<request.RequestResponse> => {
+        return new Promise((resolve, reject) => {
+            this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                let options = {
+                    loanAssociate: {
+                        loanAssociateType: updateInfo.loanAssociateType,
+                        userId: updateInfo.id
+                    }
+                };
+
+                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(response);
+                });
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        });
     }
 }
