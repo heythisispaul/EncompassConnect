@@ -116,6 +116,10 @@ export default class EncompassConnect {
         })
     }
 
+    storeToken = (token: string) => {
+        this.token = token;
+    }
+
     customRequest = (uri: string, method?: string, body?: any): Promise<request.RequestResponse> => {
         return new Promise((resolve, reject) => {
             request(uri, this.utils.callInfo(method ? method : 'GET', body ? body : undefined), (err, response) => {
@@ -161,6 +165,7 @@ export default class EncompassConnect {
         });
     }
 
+    //not yet in readme
     pipeLineView = (options: PipeLineContract, limit?: number): Promise<request.RequestResponse> => {
         let requestOptions = this.utils.callInfo('POST', options);
         let uri = 'https://api.elliemae.com/encompass/v1/loanPipeline/';
@@ -197,7 +202,6 @@ export default class EncompassConnect {
         });
     }
 
-    //untested as of 10/24
     updateLoan = (GUID: string, loanData: any, generateContract: boolean = true, loanTemplate?: string): Promise<request.RequestResponse> => {
         let uri = `https://api.elliemae.com/encompass/v1/loans/${GUID}?appendData=true`;
         if (loanTemplate) {
