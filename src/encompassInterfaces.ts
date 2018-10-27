@@ -1,13 +1,15 @@
 export interface PipeLineContract {
-    filter?: {
-      operator: "and" | "or";
-      terms: PipeLineTerms[];
-    },
+    fields: string[];
+    filter?: PipeLineFilter;
     loanGuids?: string[];
     sortOrder?: sortOrderContract[];
-    fields: string[];
   }
-  
+
+  export interface PipeLineFilter {
+    operator: "and" | "or";
+    terms: PipeLineTerms[];
+  }
+
   export interface PipeLineTerms {
     canonicalName: string;
     matchType: "greaterThanOrEquals" | "exact" | "greaterThan" | "isNotEmpty" | "isEmpty" | "lessThan" | "lessThanOrEquals" | "equals" | "notEquals" | "startsWith" | "contains";
@@ -27,12 +29,4 @@ export interface PipeLineContract {
     cellphone?: string;
     fax?: string;
     email?: string;
-  }
-
-  export interface MilestoneLogContract {
-      loanAssociateType: "user" | "group";
-      userId: string;
-      comments?: string;
-      startDate?: Date;
-      roleRequired?: boolean
   }
