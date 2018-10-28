@@ -116,7 +116,7 @@ export default class EncompassConnect {
         })
     }
 
-    storeToken = (token: string) => {
+    storeToken = (token: string): void => {
         this.token = token;
     }
 
