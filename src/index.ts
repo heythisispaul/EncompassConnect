@@ -1,5 +1,5 @@
 import * as request from 'request';
-import { PipeLineContract, LoanAssociateProperties, PipeLineFilter } from './encompassInterfaces';
+import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract } from './encompassInterfaces';
 import { RequestOptions } from 'https';
 
 export default class EncompassConnect {
@@ -132,26 +132,21 @@ export default class EncompassConnect {
     }
 
     getGuid = (loanNumber: string): Promise<string> => {
-        let options = this.utils.callInfo('POST', {
-            "filter": {
-                "operator": "and",
-                "terms": [{
+
+        let guidFilter: PipeLineContract = {
+            filter: {
+                operator: "and",
+                terms: [{
                   canonicalName: "Loan.LoanNumber",
                   value: loanNumber,
                   matchType: "exact"
               }]
             },
-            "sortOrder": [
-                {
-                    "canonicalName": "Loan.LastModified",
-                    "order": "desc"
-                }
-            ],
-            "fields": ["Loan.GUID"]
-        });
+            fields: ["Loan.GUID"]
+        }
 
         return new Promise((resolve, reject) => {
-            request('https://api.elliemae.com/encompass/v1/loanPipeline/', options, (err: any, response: any, body: any) => {
+            request('https://api.elliemae.com/encompass/v1/loanPipeline/', this.utils.callInfo('POST', guidFilter), (err: Error, response: request.RequestResponse) => {
                 if (err) {
                     reject(err);
                 }
@@ -209,10 +204,12 @@ export default class EncompassConnect {
         }
         return new Promise((resolve, reject) => {
             this.utils.contractGenerator(loanData, generateContract).then((contract) => {
-                console.log(contract);
                 request(uri, this.utils.callInfo('PATCH', contract), (err, response) => {
                     if (err) {
                         reject(err);
+                    }
+                    if (response.body) {
+                        reject(response.body);
                     }
                     resolve(response);
                 });
@@ -270,13 +267,13 @@ export default class EncompassConnect {
     }
 
     //this not right maybe? still needs tests ran 10-26
-    updateRoleFreeMilestone = (GUID: string, milestone: string, updateInfo: LoanAssociateProperties): Promise<request.RequestResponse> => {
+    updateRoleFreeMilestone = (GUID: string, milestone: string, userProperties: LoanAssociateProperties): Promise<request.RequestResponse> => {
         return new Promise((resolve, reject) => {
             this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
                 let options = {
                     loanAssociate: {
-                        loanAssociateType: updateInfo.loanAssociateType,
-                        userId: updateInfo.id
+                        loanAssociateType: userProperties.loanAssociateType,
+                        userId: userProperties.id
                     }
                 };
 
@@ -312,9 +309,34 @@ export default class EncompassConnect {
         })
     }
 
+    //any time a parameter object is provided it comes back as an empty array no matter what:
     public users = {
-        listOfUsers: () => {
-            //it's 5:00 I'm out.
+        listOfUsers: (queryParameters?: UserInfoContract): Promise<any> => {
+            let uri = 'https://api.elliemae.com/encompass/v1/company/users';
+            if (queryParameters && queryParameters.filter) {
+                let filters: any = queryParameters.filter;
+                Object.keys(queryParameters.filter).forEach((filter: string) => {
+                    let filterString = `?${filter}=`;
+                    filters[filter].forEach((param: any) => {
+                        filterString += `${param},`;
+                    });
+                    uri += filterString.substring(0, filterString.length - 1);
+                });
+            }
+            if (queryParameters) {
+                uri += queryParameters.hasOwnProperty('start') ? `?start=${queryParameters.start}` : '';
+                uri += queryParameters.hasOwnProperty('limit') ? `?limit=${queryParameters.limit}` : '';
+                uri += `?viewEmailSignature=${queryParameters.viewEmailSignature ? 'true' : 'false'}`;
+            }
+            console.log(uri);
+            return new Promise((resolve, reject) => {
+                request(uri, this.utils.callInfo('GET'), (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(response);
+                })
+            })
         }
     }
 }

@@ -19,7 +19,7 @@ If you'd like to see or move the token, the API response is returned as the valu
 
 ## Examples
 
-### : Updating a Loan
+### Updating a Loan
 Updating a loan is as simple as providing the GUID of the loan and the new information to the `.getLoan()` method after authenticating. This method by default will take in your `loanData` parameter and generate the contract structure required by the loan object model if you provide key-value pairs of the field ID and then the new information you'd like to update to. However, if your `loanData` will already be in the correct contract structure, you can turn off this functionality. For example, these two options will end up with the same result:
 
 The first, we use the default behavior and supply the new information as an object with key-value pairs of the field ID and the new data:
@@ -77,6 +77,124 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
 Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. Note that this same functionality exists in the `.batchUpdate()` method as well.
 
+### Viewing a Pipeline
+Pipeline Data can be pulled with the `.pipeLineView()` method. This method requires a Pipeline Contract object as its first parameter, and can optionally take a second parameter to specify a limit to how many results you would like. The pipeline contract determines which loans to retrieve and requires one of the two properties:
+* The `loanGuids` property - takes an array of GUIDs of the loans to return
+* The `filter` property - creates a filter based off canonical field names
+The Pipeline Contract takes two additional properties: 
+* `sortOrder` - an optional property to determine which canonical name to sort by and whether to sort ascending or descending.
+* `fields` - a required property which takes an array of canonical field names which will be returned in the response
+
+In this example, we're pulling all the loans in our pipeline view that were modified today and viewing the loan amount and borrower last name. The result will be sorted descending by date/time last modified, and will only return the top 50 results:
+```javascript
+const EncompassConnect = require('path-to-EncompassConnect/index.js');
+const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
+
+encompass.authenticate('yourUsername', 'yourPassword').then(() => {
+
+    let pipeLineOptions = {
+        filter: {
+            operator: 'and',
+            terms: [
+                {
+                    canonicalName: "Loan.LastModified",
+                    matchType: "greaterThanOrEquals",
+                    value: new Date()
+                },
+                {
+                    canonicalName: "Loan.LoanFolder",
+                    matchType: "exact",
+                    value: "My Pipeline"
+                }
+            ]
+        },
+        sortOrder: [
+            {
+                canonicalName: 'Loan.LastModified',
+                order: 'desc'
+            }
+        ],
+        fields: [
+            "Loan.LoanAmount",
+            "Fields.4002"
+        ]
+    };
+
+    encompass.pipeLineView(pipeLineOptions, 50).then((loans) => {
+        console.log(loans) // the array of loan data returned
+    })
+    .catch((err) => {
+        // handle any potential errors here.
+    });
+});
+```
+
+In this example, we already have the list of specific loans we want to see. We'll return the same data points plus the loan officer name from the loans and sort them them the same as well:
+```javascript
+const EncompassConnect = require('path-to-EncompassConnect/index.js');
+const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
+
+encompass.authenticate('yourUsername', 'yourPassword').then(() => {
+
+    let pipeLineOptions = {
+        loanGuids: [
+            'loan-guid-number-one',
+            'loan-guid-number-two',
+            'loan-guid-number-three',
+            'loan-guid-number-four'
+        ],
+        sortOrder: [
+            {
+                canonicalName: 'Loan.LastModified',
+                order: 'desc'
+            }
+        ],
+        fields: [
+            "Loan.LoanAmount",
+            "Fields.4002",
+            "Fields.317"
+        ]
+    };
+
+    encompass.pipeLineView(pipeLineOptions).then((loans) => {
+        console.log(loans) // the array of loan data returned
+    })
+    .catch((err) => {
+        // handle any potential errors here.
+    });
+});
+```
+
+### Getting a Loan
+In this example, the user has supplied a loan number (12345678) and will receive the loan's application and closing cost data back. We'll first call the `.getGuid()` method to retrieve the GUID with our loan number, and then provide that GUID and our filtering information (to specify that we only want the application and closing cost entity information) to the `.getLoan()` method:
+```javascript
+const EncompassConnect = require('path-to-EncompassConnect/index.js');
+const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
+
+encompass.authenticate('yourUsername', 'yourPassword').then(() => {
+
+    encompass.getGuid('12345678').then((guid) => {
+
+        let loanEntities = [
+            'application',
+            'closingCost'
+        ];
+
+        encompass.getLoan(guid, loanEntities).then((loanData) => {
+            console.log(loanData); //the application information for the provided loan.
+        })
+        .catch((err) => {
+            //handle any errors if this call is unsuccessful
+        });
+    })
+    .catch((err) => {
+        //handle any errors if the provided loan number does not return a GUID
+    });
+});
+```
+
+If you don't provide a second parameter to the `.getLoan()` method, the entire loan object will be returned from the Promise.
+
 ## All Methods
 All methods return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). Unless stated otherwise, the resolved value of each promise is the HTTP response from Encompass's API.
 
@@ -115,7 +233,7 @@ Takes in a loan number and returns the loan GUID as the resolution to the promis
 Parameters:
 * loannumber: string - The loan number (Loan.LoanNumber) you need the GUID for.
 
-#### .getLoan(_GUID_)
+#### .getLoan(_GUID_, _loanEntities?_)
 Retrieves all or partial data about a loan object.
 
 Parameters:
@@ -130,3 +248,10 @@ Parameters:
 * loanData: any - the object which contains the loan data you're updating.
 * generateContract: boolean _(optional)_ - Determines whether your supplied loanData object will be generated into a contract to match the object model or not (defaults to true).
 * loanTemplate: string  _(optional)_ - The URL to the loan template if one should be provided.
+
+#### .pipeLineView(_options_, _limit?_)
+Pulls an array of loans based off the filter or list of GUIDs supplied.
+
+Parameters:
+* options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the example for additional details.
+* limit: number _(optional)_ - the maximum results to return from the call. The default is 1000, but may vary depending on the amount of data being requested per loan. 
