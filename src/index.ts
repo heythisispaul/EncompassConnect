@@ -1,5 +1,5 @@
 import * as request from 'request';
-import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract } from './encompassInterfaces';
+import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile } from './encompassInterfaces';
 import { RequestOptions } from 'https';
 
 export default class EncompassConnect {
@@ -161,7 +161,7 @@ export default class EncompassConnect {
     }
 
     //not yet in readme
-    pipeLineView = (options: PipeLineContract, limit?: number): Promise<request.RequestResponse> => {
+    pipeLineView = (options: PipeLineContract, limit?: number): Promise<any[]> => {
         let requestOptions = this.utils.callInfo('POST', options);
         let uri = 'https://api.elliemae.com/encompass/v1/loanPipeline/';
         if (limit) {
@@ -178,7 +178,7 @@ export default class EncompassConnect {
     }
 
     //loan CRUD
-    getLoan = (GUID: string, loanEntities?: string[]): Promise<request.RequestResponse> => {
+    getLoan = (GUID: string, loanEntities?: string[]): Promise<any> => {
         let uri = `https://api.elliemae.com/encompass/v1/loans/${GUID}`;
         if (loanEntities) {
             uri += '?entities=';
@@ -311,32 +311,58 @@ export default class EncompassConnect {
 
     //any time a parameter object is provided it comes back as an empty array no matter what:
     public users = {
-        listOfUsers: (queryParameters?: UserInfoContract): Promise<any> => {
+        listOfUsers: (queryParameters?: UserInfoContract): Promise<UserProfile[]> => {
             let uri = 'https://api.elliemae.com/encompass/v1/company/users';
+            if (queryParameters) {
+                uri += `?viewEmailSignature=${queryParameters.viewEmailSignature ? 'true' : 'false'}`;
+                uri += queryParameters.hasOwnProperty('start') ? `&start=${queryParameters.start}` : '';
+                uri += queryParameters.hasOwnProperty('limit') ? `&limit=${queryParameters.limit}` : '';
+            }
             if (queryParameters && queryParameters.filter) {
                 let filters: any = queryParameters.filter;
                 Object.keys(queryParameters.filter).forEach((filter: string) => {
-                    let filterString = `?${filter}=`;
+                    let filterString = `&${filter}=`;
                     filters[filter].forEach((param: any) => {
                         filterString += `${param},`;
                     });
                     uri += filterString.substring(0, filterString.length - 1);
                 });
             }
-            if (queryParameters) {
-                uri += queryParameters.hasOwnProperty('start') ? `?start=${queryParameters.start}` : '';
-                uri += queryParameters.hasOwnProperty('limit') ? `?limit=${queryParameters.limit}` : '';
-                uri += `?viewEmailSignature=${queryParameters.viewEmailSignature ? 'true' : 'false'}`;
-            }
-            console.log(uri);
             return new Promise((resolve, reject) => {
                 request(uri, this.utils.callInfo('GET'), (err, response) => {
                     if (err) {
                         reject(err);
                     }
-                    resolve(response);
+                    resolve(response.body);
                 })
             })
+        },
+        userProfile: (userId: string): Promise<UserProfile> => {
+            return new Promise((resolve, reject) => {
+                request(`https://api.elliemae.com/encompass/v1/company/users/${userId}`, this.utils.callInfo('GET'), (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    if (response.body.errorCode) {
+                        reject(response.body);
+                    }
+                    resolve(response.body);
+                });
+            });
+        },
+        userLicenses: (userId: string, state?: string): Promise<LicenseInformation[]> => {
+            let uri = `https://api.elliemae.com/encompass/v1/company/users/${userId}/licenses`;
+            return new Promise((resolve, reject) => {
+                request(state ? uri + `?state=${state}` : uri, this.utils.callInfo('GET'), (err, response) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    if (response.body.errorCode) {
+                        reject(response.body);
+                    }
+                    resolve(response.body);
+                })
+            });
         }
     }
 }

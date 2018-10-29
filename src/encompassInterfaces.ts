@@ -36,10 +36,46 @@ export interface UserInfoContract {
   start?: number;
   limit?: number | string;
   filter?: {
-    groupId?: string[];
+    groupId?: string[] | number[];
     roleId?: string[];
     personaId?: string[];
-    organizationId?: string[];
+    organizationId?: string[] | number[];
     userName?: string[];
   }
+}
+
+export interface Organization {
+  entityId: string | number;
+  entityType: string;
+  entityName: string;
+  entityUri: string;
+}
+
+export interface UserProfile {
+  id: string;
+  lastName: string;
+  firstName: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  userIndicators: string[],
+  peerLoanAccess: string;
+  lastLogin: string | Date;
+  encompassVersion: string;
+  personalStatusOnline: boolean;
+  personas: any[];
+  workingFolder?: string;
+  organization?: Organization;
+  subordinateLoanAccess?: string;
+  comments?: string;
+  ccSite?: any;
+}
+
+export interface LicenseInformation {
+    state: string;
+    enabled: boolean;
+    license?: string;
+    expirationDate?: string | Date;
+    issueDate?: string | Date;
+    startDate?: string | Date;
 }

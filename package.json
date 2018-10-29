@@ -1,6 +1,6 @@
 {
   "name": "encompassconnect",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "",
   "main": "dist/index.js",
   "types": "/dist/index.d.ts",
@@ -8,8 +8,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && cd dist && node test.js"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heythisispaul/EncompassConnect"
+  },
+  "author": "Paul Richard",
+  "license": "MIT",
+  "keywords": [
+    "Ellie Mae",
+    "Encompass",
+    "Mortgage",
+    "promise"
+  ],
   "dependencies": {
     "@types/request": "^2.47.1",
     "chai": "^4.2.0",
