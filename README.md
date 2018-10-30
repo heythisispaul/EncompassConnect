@@ -1,10 +1,13 @@
 # Encompass Connect
-An **Unofficial**, fully-typed Node SDK that wraps around Ellie Mae's Encompass [RESTful API.](https://developer.elliemae.com/)
+An Unofficial, fully-typed Node SDK that wraps around Ellie Mae's Encompass [RESTful API.](https://developer.elliemae.com/)
 
 ## Getting Started
-Include the source `dist/index.js` file into your project then create an instance with your Encompass information:
+Install via npm:
+`npm install encompassconnect`
+
+Import the module into your project then create an instance with your Encompass information:
 ```typescript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
+import EncompassConnect from 'encompassconnect';
 const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
 ```
 ### Authenticating 
@@ -17,6 +20,8 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 ```
 If you'd like to see or move the token, the API response is returned as the value of the promise (as is the case with most methods in this library), and is available as the `access_token` property on the body of the response.
 
+If you already have a token supplied from another source, you can first call the `.storeToken()` method and supply it with your token to use this module with out having to authenticate.
+
 ## Examples
 
 ### Updating a Loan
@@ -24,9 +29,6 @@ Updating a loan is as simple as providing the GUID of the loan and the new infor
 
 The first, we use the default behavior and supply the new information as an object with key-value pairs of the field ID and the new data:
 ```javascript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
-const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
-
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     let loanData = {
@@ -45,9 +47,6 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
 In the second, we already have our data formatted in a contract which the loan object model knows how to read. So we provide the information as normal, but provide a third parameter to the `.updateLoan()` method to signal we do not want to generate a contract:
 ```javascript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
-const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
-
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     let loanData = {
@@ -75,7 +74,7 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 });
 ```
 
-Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. Note that this same functionality exists in the `.batchUpdate()` method as well.
+Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. Keep in mind the second example is less taxing on the server, it requires one less call to Encompass and is generally recommended if the fields being updated are constant. Note that this same functionality exists in the `.batchUpdate()` method as well.
 
 ### Viewing a Pipeline
 Pipeline Data can be pulled with the `.pipeLineView()` method. This method requires a Pipeline Contract object as its first parameter, and can optionally take a second parameter to specify a limit to how many results you would like. The pipeline contract determines which loans to retrieve and requires one of the two properties:
@@ -87,9 +86,6 @@ The Pipeline Contract takes two additional properties:
 
 In this example, we're pulling all the loans in our pipeline view that were modified today and viewing the loan amount and borrower last name. The result will be sorted descending by date/time last modified, and will only return the top 50 results:
 ```javascript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
-const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
-
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     let pipeLineOptions = {
@@ -131,9 +127,6 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
 In this example, we already have the list of specific loans we want to see. We'll return the same data points plus the loan officer name from the loans and sort them them the same as well:
 ```javascript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
-const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
-
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     let pipeLineOptions = {
@@ -168,9 +161,6 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 ### Getting a Loan
 In this example, the user has supplied a loan number (12345678) and will receive the loan's application and closing cost data back. We'll first call the `.getGuid()` method to retrieve the GUID with our loan number, and then provide that GUID and our filtering information (to specify that we only want the application and closing cost entity information) to the `.getLoan()` method:
 ```javascript
-const EncompassConnect = require('path-to-EncompassConnect/index.js');
-const encompass = new EncompassConnect('YourClientId', 'YourAPISecret', 'YourInstanceId');
-
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     encompass.getGuid('12345678').then((guid) => {
@@ -249,9 +239,25 @@ Parameters:
 * generateContract: boolean _(optional)_ - Determines whether your supplied loanData object will be generated into a contract to match the object model or not (defaults to true).
 * loanTemplate: string  _(optional)_ - The URL to the loan template if one should be provided.
 
+### .deleteLoan(_GUID_)
+Deletes the specified loan from your Encompass instance.
+
+Paramters:
+* GUID: string - The GUID of the loan to delete.
+
 #### .pipeLineView(_options_, _limit?_)
 Pulls an array of loans based off the filter or list of GUIDs supplied.
 
 Parameters:
-* options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the example for additional details.
+* options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the [example](https://github.com/heythisispaul/EncompassConnect#viewing-a-pipeline) for additional details.
 * limit: number _(optional)_ - the maximum results to return from the call. The default is 1000, but may vary depending on the amount of data being requested per loan. 
+
+### Custom API Calls
+
+#### .customRequest(_uri_, _method?_, _body?_)
+If There isn't an existing function to suit your needs, you can supply this method with the Encompass API endpoint you need. It will default to a 'GET' request, but you can supply additional parameters as necessary. It returns a promise that resolves to the HTTP response from Encompass.
+
+Parameters:
+* uri: string - The Encompass API to interact with.
+* method: string (_optional_) - The HTTP verb to use. If not supplied, defaults to 'GET'.
+* body: any (_optional_) - The JSON body to send with your request if required.

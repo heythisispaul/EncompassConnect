@@ -257,6 +257,9 @@ export default class EncompassConnect {
                     if (err) {
                         reject(err);
                     }
+                    if (response.body) {
+                        reject(response.body);
+                    }
                     resolve(response);
                 });
             })
@@ -280,6 +283,9 @@ export default class EncompassConnect {
                 request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
                     if (err) {
                         reject(err);
+                    }
+                    if (response.body) {
+                        reject(response.body);
                     }
                     resolve(response);
                 });
@@ -309,7 +315,6 @@ export default class EncompassConnect {
         })
     }
 
-    //any time a parameter object is provided it comes back as an empty array no matter what:
     public users = {
         listOfUsers: (queryParameters?: UserInfoContract): Promise<UserProfile[]> => {
             let uri = 'https://api.elliemae.com/encompass/v1/company/users';
