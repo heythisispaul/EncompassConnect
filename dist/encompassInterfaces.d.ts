@@ -21,10 +21,13 @@ export interface sortOrderContract {
 export interface LoanAssociateProperties {
     loanAssociateType: "user" | "group";
     id: string;
+    name?: string;
     phone?: string;
     cellphone?: string;
     fax?: string;
     email?: string;
+    roleId?: string;
+    roleName?: string;
 }
 export interface UserInfoContract {
     viewEmailSignature: boolean;

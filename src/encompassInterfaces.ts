@@ -25,10 +25,13 @@ export interface sortOrderContract {
 export interface LoanAssociateProperties {
   loanAssociateType: "user" | "group";
   id: string;
+  name?: string;
   phone?: string;
   cellphone?: string;
   fax?: string;
   email?: string;
+  roleId?: string;
+  roleName?: string;
 }
 
 export interface UserInfoContract {
@@ -72,10 +75,10 @@ export interface UserProfile {
 }
 
 export interface LicenseInformation {
-    state: string;
-    enabled: boolean;
-    license?: string;
-    expirationDate?: string | Date;
-    issueDate?: string | Date;
-    startDate?: string | Date;
+  state: string;
+  enabled: boolean;
+  license?: string;
+  expirationDate?: string | Date;
+  issueDate?: string | Date;
+  startDate?: string | Date;
 }

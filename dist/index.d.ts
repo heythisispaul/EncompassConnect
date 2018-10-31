@@ -6,6 +6,7 @@ export default class EncompassConnect {
     instanceId: string;
     token: string;
     constructor(clientId: string, APIsecret: string, instanceId: string);
+    private root;
     private utils;
     authenticate: (username: string, password: string) => Promise<request.Response>;
     tokenIntrospect: (token?: string | undefined) => Promise<request.Response>;
@@ -17,10 +18,14 @@ export default class EncompassConnect {
     getLoan: (GUID: string, loanEntities?: string[] | undefined) => Promise<any>;
     updateLoan: (GUID: string, loanData: any, generateContract?: boolean, loanTemplate?: string | undefined) => Promise<request.Response>;
     deleteLoan: (GUID: string) => Promise<request.Response>;
-    assignUserToMilestone: (GUID: string, milestone: string, userProperties: LoanAssociateProperties) => Promise<request.Response>;
-    completeMilestone: (GUID: string, milestone: string) => Promise<request.Response>;
-    updateRoleFreeMilestone: (GUID: string, milestone: string, userProperties: LoanAssociateProperties) => Promise<request.Response>;
     batchUpdate: (options: string[] | PipeLineFilter, loanData: any, generateContract?: boolean) => Promise<request.Response>;
+    milestones: {
+        assignUser: (GUID: string, milestone: string, userProperties: LoanAssociateProperties) => Promise<request.Response>;
+        complete: (GUID: string, milestone: string) => Promise<request.Response>;
+        updateRoleFree: (GUID: string, milestone: string, userProperties: LoanAssociateProperties) => Promise<request.Response>;
+        all: (GUID: string) => Promise<any[]>;
+        associate: (GUID: string, milestone: string) => Promise<LoanAssociateProperties>;
+    };
     users: {
         listOfUsers: (queryParameters?: UserInfoContract | undefined) => Promise<UserProfile[]>;
         userProfile: (userId: string) => Promise<UserProfile>;

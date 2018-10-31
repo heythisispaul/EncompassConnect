@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("request");
 class EncompassConnect {
     constructor(clientId, APIsecret, instanceId) {
+        this.root = 'https://api.elliemae.com/encompass/v1';
         this.utils = {
             callInfo: (method, body) => {
                 let options = {
@@ -22,7 +23,7 @@ class EncompassConnect {
             getMilestoneId: (GUID, milestone) => {
                 return new Promise((resolve, reject) => {
                     let milestoneId = '';
-                    request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
+                    request(`${this.root}/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
                         if (err) {
                             reject(err);
                         }
@@ -57,7 +58,7 @@ class EncompassConnect {
                     if (!generate) {
                         resolve(fields);
                     }
-                    request('https://api.elliemae.com/encompass/v1/schema/loan/contractGenerator', this.utils.callInfo('POST', fields), (err, response) => {
+                    request(`${this.root}/schema/loan/contractGenerator`, this.utils.callInfo('POST', fields), (err, response) => {
                         if (err) {
                             reject(err);
                         }
@@ -126,7 +127,7 @@ class EncompassConnect {
                 fields: ["Loan.GUID"]
             };
             return new Promise((resolve, reject) => {
-                request('https://api.elliemae.com/encompass/v1/loanPipeline/', this.utils.callInfo('POST', guidFilter), (err, response) => {
+                request(`${this.root}/loanPipeline/`, this.utils.callInfo('POST', guidFilter), (err, response) => {
                     if (err) {
                         reject(err);
                     }
@@ -142,7 +143,7 @@ class EncompassConnect {
         //not yet in readme
         this.pipeLineView = (options, limit) => {
             let requestOptions = this.utils.callInfo('POST', options);
-            let uri = 'https://api.elliemae.com/encompass/v1/loanPipeline/';
+            let uri = `${this.root}/loanPipeline/`;
             if (limit) {
                 uri += `?limit=${limit.toString()}`;
             }
@@ -157,7 +158,7 @@ class EncompassConnect {
         };
         //loan CRUD
         this.getLoan = (GUID, loanEntities) => {
-            let uri = `https://api.elliemae.com/encompass/v1/loans/${GUID}`;
+            let uri = `${this.root}/loans/${GUID}`;
             if (loanEntities) {
                 uri += '?entities=';
                 loanEntities.forEach((item) => {
@@ -175,7 +176,7 @@ class EncompassConnect {
             });
         };
         this.updateLoan = (GUID, loanData, generateContract = true, loanTemplate) => {
-            let uri = `https://api.elliemae.com/encompass/v1/loans/${GUID}?appendData=true`;
+            let uri = `${this.root}/loans/${GUID}?appendData=true`;
             if (loanTemplate) {
                 uri += '?loanTemplate=' + loanTemplate;
             }
@@ -198,7 +199,7 @@ class EncompassConnect {
         };
         this.deleteLoan = (GUID) => {
             return new Promise((resolve, reject) => {
-                request(`https://api.elliemae.com/encompass/v1/loans/${GUID}`, this.utils.callInfo('DELETE'), (err, response, body) => {
+                request(`${this.root}/loans/${GUID}`, this.utils.callInfo('DELETE'), (err, response, body) => {
                     if (err) {
                         reject(err);
                     }
@@ -208,65 +209,13 @@ class EncompassConnect {
         };
         //still need create
         //end loan CRUD
-        this.assignUserToMilestone = (GUID, milestone, userProperties) => {
-            return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(response);
-                    });
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        this.completeMilestone = (GUID, milestone) => {
-            return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response, body) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(response);
-                    });
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        //this not right maybe? still needs tests ran 10-26
-        this.updateRoleFreeMilestone = (GUID, milestone, userProperties) => {
-            return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    let options = {
-                        loanAssociate: {
-                            loanAssociateType: userProperties.loanAssociateType,
-                            userId: userProperties.id
-                        }
-                    };
-                    request(`https://api.elliemae.com/encompass/v1/loans/${GUID}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(response);
-                    });
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            });
-        };
         //needs testing as well 10/26
         this.batchUpdate = (options, loanData, generateContract = true) => {
             return new Promise((resolve, reject) => {
                 this.utils.contractGenerator(loanData, generateContract).then((contract) => {
                     let batchOptions = { loanData: contract };
                     batchOptions[Array.isArray(options) ? 'loanGuids' : 'filter'] = options;
-                    request('https://api.elliemae.com/encompass/v1/loanBatch/updateRequests', this.utils.callInfo('POST', batchOptions), (err, response) => {
+                    request(`${this.root}/loanBatch/updateRequests`, this.utils.callInfo('POST', batchOptions), (err, response) => {
                         if (err) {
                             reject(err);
                         }
@@ -278,10 +227,101 @@ class EncompassConnect {
                 });
             });
         };
-        //any time a parameter object is provided it comes back as an empty array no matter what:
+        this.milestones = {
+            assignUser: (GUID, milestone, userProperties) => {
+                return new Promise((resolve, reject) => {
+                    this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                        request(`${this.root}/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            resolve(response);
+                        });
+                    })
+                        .catch((err) => {
+                        reject(err);
+                    });
+                });
+            },
+            complete: (GUID, milestone) => {
+                return new Promise((resolve, reject) => {
+                    this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                        request(`${this.root}/loans/${GUID}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            if (response.body) {
+                                reject(response.body);
+                            }
+                            resolve(response);
+                        });
+                    })
+                        .catch((err) => {
+                        reject(err);
+                    });
+                });
+            },
+            //this not right maybe? still needs tests ran 10-26
+            updateRoleFree: (GUID, milestone, userProperties) => {
+                return new Promise((resolve, reject) => {
+                    this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                        let options = {
+                            loanAssociate: {
+                                loanAssociateType: userProperties.loanAssociateType,
+                                userId: userProperties.id
+                            }
+                        };
+                        request(`${this.root}/loans/${GUID}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            if (response.body) {
+                                reject(response.body);
+                            }
+                            resolve(response);
+                        });
+                    })
+                        .catch((err) => {
+                        reject(err);
+                    });
+                });
+            },
+            //eventually may want a type for a milestone oject
+            all: (GUID) => {
+                return new Promise((resolve, reject) => {
+                    request(`${this.root}/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        if (response.body.errorCode) {
+                            reject(response.body.details);
+                        }
+                        resolve(response.body);
+                    });
+                });
+            },
+            associate: (GUID, milestone) => {
+                return new Promise((resolve, reject) => {
+                    this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                        request(`${this.root}/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('GET'), (err, response) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            if (response.body.errorCode) {
+                                reject(response.body.details);
+                            }
+                            resolve(response.body);
+                        });
+                    })
+                        .catch((err) => {
+                        reject(err);
+                    });
+                });
+            }
+        };
         this.users = {
             listOfUsers: (queryParameters) => {
-                let uri = 'https://api.elliemae.com/encompass/v1/company/users';
+                let uri = `${this.root}/company/users`;
                 if (queryParameters) {
                     uri += `?viewEmailSignature=${queryParameters.viewEmailSignature ? 'true' : 'false'}`;
                     uri += queryParameters.hasOwnProperty('start') ? `&start=${queryParameters.start}` : '';
@@ -308,26 +348,26 @@ class EncompassConnect {
             },
             userProfile: (userId) => {
                 return new Promise((resolve, reject) => {
-                    request(`https://api.elliemae.com/encompass/v1/company/users/${userId}`, this.utils.callInfo('GET'), (err, response) => {
+                    request(`${this.root}/company/users/${userId}`, this.utils.callInfo('GET'), (err, response) => {
                         if (err) {
                             reject(err);
                         }
                         if (response.body.errorCode) {
-                            reject(response.body);
+                            reject(response.body.details);
                         }
                         resolve(response.body);
                     });
                 });
             },
             userLicenses: (userId, state) => {
-                let uri = `https://api.elliemae.com/encompass/v1/company/users/${userId}/licenses`;
+                let uri = `${this.root}/company/users/${userId}/licenses`;
                 return new Promise((resolve, reject) => {
                     request(state ? uri + `?state=${state}` : uri, this.utils.callInfo('GET'), (err, response) => {
                         if (err) {
                             reject(err);
                         }
                         if (response.body.errorCode) {
-                            reject(response.body);
+                            reject(response.body.details);
                         }
                         resolve(response.body);
                     });

@@ -81,8 +81,8 @@ Pipeline Data can be pulled with the `.pipeLineView()` method. This method requi
 * The `loanGuids` property - takes an array of GUIDs of the loans to return
 * The `filter` property - creates a filter based off canonical field names
 The Pipeline Contract takes two additional properties: 
-* `sortOrder` - an optional property to determine which canonical name to sort by and whether to sort ascending or descending.
-* `fields` - a required property which takes an array of canonical field names which will be returned in the response
+    * `sortOrder` - an optional property to determine which canonical name to sort by and whether to sort ascending or descending.
+    * `fields` - a required property which takes an array of canonical field names which will be returned in the response
 
 In this example, we're pulling all the loans in our pipeline view that were modified today and viewing the loan amount and borrower last name. The result will be sorted descending by date/time last modified, and will only return the top 50 results:
 ```javascript
@@ -224,7 +224,7 @@ Parameters:
 * loannumber: string - The loan number (Loan.LoanNumber) you need the GUID for.
 
 #### .getLoan(_GUID_, _loanEntities?_)
-Retrieves all or partial data about a loan object.
+Retrieves all or partial data about a loan object. Returns a promise that resolves the loan object.
 
 Parameters:
 * GUID: string - the GUID for the loan object to retrieve.
@@ -239,18 +239,78 @@ Parameters:
 * generateContract: boolean _(optional)_ - Determines whether your supplied loanData object will be generated into a contract to match the object model or not (defaults to true).
 * loanTemplate: string  _(optional)_ - The URL to the loan template if one should be provided.
 
-### .deleteLoan(_GUID_)
+#### .deleteLoan(_GUID_)
 Deletes the specified loan from your Encompass instance.
 
 Paramters:
 * GUID: string - The GUID of the loan to delete.
 
 #### .pipeLineView(_options_, _limit?_)
-Pulls an array of loans based off the filter or list of GUIDs supplied.
+Pulls an array of loans based off the filter or list of GUIDs supplied. Returns a promise that resolves to the array of loans with the fields you requested.
 
 Parameters:
 * options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the [example](https://github.com/heythisispaul/EncompassConnect#viewing-a-pipeline) for additional details.
 * limit: number _(optional)_ - the maximum results to return from the call. The default is 1000, but may vary depending on the amount of data being requested per loan. 
+
+### Milestones
+
+#### milestones.all(_GUID_)
+Returns a promise which resolves an array of milestone logs for the provided loan.
+
+Paramters:
+* GUID: string - The GUID for the loan which to look up milestone logs.
+
+#### milestones.associate(_GUID_, _milestone_)
+Returns a promise which resolves the loan associate properties for the person assigned to the loan/milestone provided.
+
+Paramters:
+* GUID: string - The GUID of the loan to be looked up.
+* milestone: string - the milestone of the needed user profle.
+
+#### milestones.assign(_GUID_, _milestone_, _userProperties_)
+Assigns a user to the provided loan and milestone. Returns a promise of the response from Encompass.
+
+Paramters: 
+* GUID: string - The Guid of the loan to update
+* milestone: string - The milestone to update (be sure it matches how it is spelled in Encompass)
+* userProperties: LoanAssociateProperties - an object that requires the `loanAssociateType` property (will always be 'user' or 'group') and the `id` property (the Encompass user Id of the user to assign). Can also take optional parameters of contact information types if needed to be updated.
+
+#### milestones.complete(_GUID_, _milestone_)
+Marks the provided loan/milestone as completed. Returns a promise that resolves to the response from Encompass.
+
+Paramters:
+* GUID: string - The GUID of the loan to update
+* milestone: string - The milestone to complete (be sure it matches the spelling in Encompass exactly)
+
+### Retrieving User Information
+
+#### users.list(_userInfoContract?_)
+Pulls the user profile information of your organization's users. Can optionally take an object to filter the results. Returns a promise which resolves the array of users.
+
+Parameters: 
+* userInfoContract: UserInfoContract (_optional_) - An object that acts as a filters the user profiles returned. Includes the following properties: 
+    * `viewEmailSignature`: boolean - the **only** required property
+    * `start`: number - Allows to optionally skip over records.
+    * `limit`: number
+    * `filter` - Can take the following properties. Each property takes an array of strings of the property you would like to filter to:
+        * `groupId`
+        * `roleId`
+        * `personaId`
+        * `organizationId`
+        * `userName`
+
+#### users.profile(_userId_)
+Returns a user profile for the provided Encompass Id as the resolution to a promise.
+
+Paramters:
+* userId: string - The Encompass user Id to look up.
+
+#### users.licenses(_userId_, _state?_)
+Returns an array of the licensing information by state for the provided Encompass user. Can optionally be filtered by state with the second parameter.
+
+Paramters:
+* userId: string - The Encompass Id of the user to look up.
+* state: string (_optional_) - The two-letter state code of the state to filter down to.
 
 ### Custom API Calls
 
