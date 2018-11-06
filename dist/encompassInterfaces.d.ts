@@ -1,8 +1,12 @@
 export interface PipeLineContract {
     fields: string[];
-    filter?: PipeLineFilter;
-    loanGuids?: string[];
     sortOrder?: sortOrderContract[];
+}
+export interface LoanGuidsPipeLineContract extends PipeLineContract {
+    loanGuids: string[];
+}
+export interface FilterPipeLineContract extends PipeLineContract {
+    filter: PipeLineFilter;
 }
 export interface PipeLineFilter {
     operator: "and" | "or";
@@ -30,15 +34,15 @@ export interface LoanAssociateProperties {
     roleName?: string;
 }
 export interface UserInfoContract {
-    viewEmailSignature: boolean;
+    viewEmailSignature?: boolean;
     start?: number;
     limit?: number | string;
     filter?: {
-        groupId?: string[] | number[];
-        roleId?: string[];
-        personaId?: string[];
-        organizationId?: string[] | number[];
-        userName?: string[];
+        groupId?: string | number;
+        roleId?: string | number;
+        personaId?: string | number;
+        organizationId?: string | number;
+        userName?: string;
     };
 }
 export interface Organization {
@@ -73,4 +77,10 @@ export interface LicenseInformation {
     expirationDate?: string | Date;
     issueDate?: string | Date;
     startDate?: string | Date;
+}
+export interface CreateLoanContract {
+    view?: "entity" | "id";
+    loanTemplate?: string;
+    loanFolder?: string;
+    loan?: any;
 }

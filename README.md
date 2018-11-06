@@ -27,13 +27,16 @@ If you already have a token supplied from another source, you can first call the
 ### Updating a Loan
 Updating a loan is as simple as providing the GUID of the loan and the new information to the `.getLoan()` method after authenticating. This method by default will take in your `loanData` parameter and generate the contract structure required by the loan object model if you provide key-value pairs of the field ID and then the new information you'd like to update to. However, if your `loanData` will already be in the correct contract structure, you can turn off this functionality. For example, these two options will end up with the same result:
 
-The first, we use the default behavior and supply the new information as an object with key-value pairs of the field ID and the new data:
+The first, we use the default behavior and supply the new information as an object with key-value pairs of the field ID and the new data. **Note that custom fields are placed inside their own `customFields` property**:
 ```javascript
 encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 
     let loanData = {
         "4002": "New Borrower Last Name" //ID for the Borrower Last Name field
-        "317": "New Loan Officer Name" //ID for the Loan Officer Name field
+        "317": "New Loan Officer Name", //ID for the Loan Officer Name field
+        customFields: { //Custom fields must go inside this property
+            "CX.CUSTOMFIELDID": "500" //numbers will automatically be parsed
+        }
     };
 
     encompass.updateLoan('guid-Of-Loan-To-Update', loanData).then((response) => {
@@ -62,6 +65,13 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
                 contactType: "LOAN_OFFICER",
                 name: "New Loan Officer Name" //same as Field 317
             }
+        ],
+        customFields: [
+            {
+                fieldName: "CX.CUSTOMFIELDID", //The custom field to update
+                stringValue: "500",
+                numericValue: 500
+            }
         ]
     };
 
@@ -74,7 +84,7 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 });
 ```
 
-Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. **If you're updating custom fields, you must supply the data in a preformatted contract structure.** Keep in mind the second example is less taxing on the server, it requires one less call to Encompass and is generally recommended if the fields being updated are constant. Note that this same functionality exists in the `.batchUpdate()` method as well.
+Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. Keep in mind the second example is less taxing on the server, it requires one less call to Encompass and is generally recommended if the fields being updated are constant. Note that this same functionality exists in the `.batchUpdate()` method as well.
 
 ### Viewing a Pipeline
 Pipeline Data can be pulled with the `.pipeLineView()` method. This method requires a Pipeline Contract object as its first parameter, and can optionally take a second parameter to specify a limit to how many results you would like. The pipeline contract determines which loans to retrieve and requires one of the two properties:
@@ -171,7 +181,7 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
         ];
 
         encompass.getLoan(guid, loanEntities).then((loanData) => {
-            console.log(loanData); //the application information for the provided loan.
+            console.log(loanData); //the application and closing cost information for the provided loan.
         })
         .catch((err) => {
             //handle any errors if this call is unsuccessful
@@ -184,6 +194,34 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 ```
 
 If you don't provide a second parameter to the `.getLoan()` method, the entire loan object will be returned from the Promise.
+
+### Assigning a User and Completing Milestones
+Here we have a loan that has completed processing and now needs to be sent to underwriting. We're assigning it to a user with the Encompass Id 'jsmith' and the milestones are labeled 'Underwriting' and 'Processing' in Encompass. First we'll assign our user to the 'Underwriting' milestone, and then complete the 'Processing' milestone now that the loan is ready to move on:
+```javascript
+encompass.authenticate('yourUserName', 'yourPassword').then(() => {
+
+    let underwriter = {
+        loanAssociateType: 'user',
+        id: 'jsmith'
+    };
+
+    encompass.milestones.assign('guid-Of-Loan-To-Update', 'Underwriting', underwriter).then(() => {
+
+        encompass.milestones.complete('guid-Of-Loan-To-Update', 'Processing').then(() => {
+            //any additional actions can be done here.
+        })
+        .catch((err) => {
+            //handle any errors if the milestone could not be completed.
+            console.log(err);
+        });
+    })
+    .catch((err) => {
+        //handle any errors if the user could not be assigned.
+        console.log(err);
+    });
+});
+```
+A parameter can be supplied to the `.then()` methods and will resolve to the HTTP response from Encompass if you need that information as well.
 
 ## All Methods
 All methods return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). Unless stated otherwise, the resolved value of each promise is the HTTP response from Encompass's API.
@@ -210,7 +248,7 @@ Parameters:
 * token: string _(optional)_ - the token you'd like to be revoked. If one is not supplied, it will call the instance's `token` property by default.
 
 #### .storeToken(_token_)
-Stores the token as the `token` property of the EncompassConnect instance it is called from. Allows you to use tokens collected from different sources.
+Stores the token as the `token` property of the EncompassConnect instance it is called from. Allows you to use tokens collected from different sources. This method is void and does not return a promise.
 
 Parameters:
 * token: string - the token you would like to store as the new token value for this instance.
@@ -245,7 +283,7 @@ Updates a supplied loan object with new information.
 
 Parameters: 
 * GUID: string - the GUID for the loan object to update.
-* loanData: any - the object which contains the loan data you're updating.
+* loanData: any - the object which contains the loan data you're updating. Check out the [example](https://github.com/heythisispaul/EncompassConnect#updating-a-loan) for additional information.
 * generateContract: boolean _(optional)_ - Determines whether your supplied loanData object will be generated into a contract to match the object model or not (defaults to true).
 * loanTemplate: string  _(optional)_ - The URL to the loan template if one should be provided.
 
@@ -259,7 +297,7 @@ Paramters:
 Pulls an array of loans based off the filter or list of GUIDs supplied. Returns a promise that resolves to the array of loans with the fields you requested.
 
 Parameters:
-* options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the [example](https://github.com/heythisispaul/EncompassConnect#viewing-a-pipeline) for additional details.
+* options: FilterPipeLineContract | LoanGuidsPipeLineContract - An object that determines which loans and fields being pulled. Check out the [example](https://github.com/heythisispaul/EncompassConnect#viewing-a-pipeline) for additional details.
 * limit: number _(optional)_ - the maximum results to return from the call. The default is 1000, but may vary depending on the amount of data being requested per loan. 
 
 
@@ -304,12 +342,12 @@ Parameters:
     * `viewEmailSignature`: boolean - determines if the email signature HTML will be returned with the results (defaults to false).
     * `start`: number - Allows to optionally skip over records.
     * `limit`: number
-    * `filter` - Can take the following properties. Each property takes an array of strings of the property you would like to filter to:
+    * `filter` - Can take the following properties. Each property takes a string or number of the property you would like to filter to:
         * `groupId`
         * `roleId`
         * `personaId`
         * `organizationId`
-        * `userName`
+        * `userName` (Looks at first or last name but not full name. Eg - John Smith would return from providing 'John' or 'Smith' but not 'John Smith')
 
 #### users.profile(_userId_)
 Returns a user profile for the provided Encompass Id as the resolution to a promise.
@@ -322,7 +360,7 @@ Returns an array of the licensing information by state for the provided Encompas
 
 Paramters:
 * userId: string - The Encompass Id of the user to look up.
-* state: string (_optional_) - The two-letter state code of the state to filter down to.
+* state: string _(optional)_ - The two-letter state code of the state to filter down to.
 
 ### Custom API Calls
 
@@ -331,5 +369,5 @@ If There isn't an existing function to suit your needs, you can supply this meth
 
 Parameters:
 * uri: string - The Encompass API to interact with.
-* method: string (_optional_) - The HTTP verb to use. If not supplied, defaults to 'GET'.
-* body: any (_optional_) - The JSON body to send with your request if required.
+* method: string _(optional)_ - The HTTP verb to use. If not supplied, defaults to 'GET'.
+* body: any _(optional)_ - The JSON body to send with your request if required.

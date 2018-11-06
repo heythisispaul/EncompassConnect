@@ -1,7 +1,6 @@
 import * as request from 'request';
-import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile, CreateLoanContract } from './encompassInterfaces';
+import { LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile, CreateLoanContract, FilterPipeLineContract, LoanGuidsPipeLineContract } from './encompassInterfaces';
 import { RequestOptions } from 'https';
-import { rejects } from 'assert';
 
 export default class EncompassConnect {
     clientId: string;
@@ -19,6 +18,19 @@ export default class EncompassConnect {
     private root: string = 'https://api.elliemae.com/encompass/v1';
 
     private utils = {
+        handleResponse: (resolve: any, reject: any, err: Error, response: request.RequestResponse, override?: any): void => {
+            if (err) {
+                reject(err);
+            }
+            if (response.body && response.body.errorCode) {
+                reject(response.body.details);
+            }
+            resolve(override ? override : response);
+        },
+        strictURI: (uriComponent: string): string => {
+            let cleaned = uriComponent.replace(/[{}+-:`"!'()*&<>]/g, '');
+            return cleaned;
+        },
         callInfo: (method: string, body?: any): RequestOptions => {
             let options: any = {
                 method: method,
@@ -37,7 +49,7 @@ export default class EncompassConnect {
         getMilestoneId: (GUID: string, milestone: string): Promise<string> => {
             return new Promise((resolve, reject) => {
                 let milestoneId: string = '';
-                request(`${this.root}/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
+                request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
                     if (err) {
                         reject(err);
                     }
@@ -67,17 +79,46 @@ export default class EncompassConnect {
                 body: dataString
             }
         },
+        numberCheck: (value: string | number): number | undefined => {
+            if (typeof(value) == 'number') {
+                return value;
+            }
+            let numregex = /^[0-9]+([,.][0-9]+)?$/g;
+            return numregex.test(value) ? parseFloat(value) : undefined;
+        },
+        //needs testing as of 11/6
         contractGenerator: (fields: any, generate: boolean): Promise<request.RequestResponse> => {
             return new Promise((resolve, reject) => {
+                let entryFields: any = { ...fields };
+                let customReturn: any[] = [];
                 if (!generate) {
                     resolve(fields);
                 }
-                request(`${this.root}/schema/loan/contractGenerator`, this.utils.callInfo('POST', fields), (err, response) => {
+                if (fields.customFields) {
+                    let customFields: any = fields.customFields;
+                    delete entryFields.customFields;
+                    Object.entries(customFields).forEach((cf: any) => {
+                        let cfObj: any = {
+                            fieldName: cf[0],
+                            stringValue: cf[1].toString()
+                        };
+                        if (this.utils.numberCheck(cf[1])) {
+                            cfObj.numericValue = this.utils.numberCheck(cf[1]);
+                        }
+                        customReturn.push(cfObj);
+                    });
+                }
+                request(`${this.root}/schema/loan/contractGenerator`, this.utils.callInfo('POST', entryFields), (err, response) => {
+                    // this.utils.handleResponse(resolve, reject, err, response, response.body);
                     if (err) {
                         reject(err);
                     }
-                    if (response.body.errorCode) {
+                    if (response.body && response.body.errorCode) {
                         reject(response.body.details);
+                    }
+                    if (fields.customFields) {
+                        response.body.customFields = customReturn;
+                        resolve(response.body);
                     }
                     resolve(response.body);
                 });
@@ -139,7 +180,7 @@ export default class EncompassConnect {
 
     getGuid = (loanNumber: string): Promise<string> => {
 
-        let guidFilter: PipeLineContract = {
+        let guidFilter: FilterPipeLineContract = {
             filter: {
                 operator: "and",
                 terms: [{
@@ -156,68 +197,56 @@ export default class EncompassConnect {
                 if (err) {
                     reject(err);
                 }
-                if (response.body.length > 0) {
+                if (response.body && response.body.length > 0) {
                     resolve(response.body[0].loanGuid);
                 }
                 else {
-                    reject(`Loan ${loanNumber} did not return a matching GUID`);
+                    reject(`Loan ${loanNumber} did not return a GUID.`);
                 }
             });
         });
     }
 
     //not yet in readme
-    pipeLineView = (options: PipeLineContract, limit?: number): Promise<any[]> => {
+    pipeLineView = (options: FilterPipeLineContract | LoanGuidsPipeLineContract, limit?: number): Promise<any[]> => {
         let requestOptions = this.utils.callInfo('POST', options);
         let uri = `${this.root}/loanPipeline/`;
         if (limit) {
-            uri += `?limit=${limit.toString()}`;
+            uri += `?limit=${limit}`;
         }
         return new Promise((resolve, reject) => {
             request(uri, requestOptions, (err, response) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(response.body);
+                this.utils.handleResponse(resolve, reject, err, response, response.body);
             });
         });
     }
 
     //loan CRUD
     getLoan = (GUID: string, loanEntities?: string[]): Promise<any> => {
-        let uri = `${this.root}/loans/${GUID}`;
+        let uri = `${this.root}/loans/${this.utils.strictURI(GUID)}`;
         if (loanEntities) {
             uri += '?entities=';
             loanEntities.forEach((item) => {
-                uri += item + ',';
+                uri += encodeURIComponent(item + ',');
             });
             uri = uri.substring(0, uri.length - 1);
         }
         return new Promise((resolve, reject) => {
             request(uri, this.utils.callInfo('GET'), (err, response) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(response.body);
+                this.utils.handleResponse(resolve, reject, err, response, response.body);
             });
         });
     }
 
     updateLoan = (GUID: string, loanData: any, generateContract: boolean = true, loanTemplate?: string): Promise<request.RequestResponse> => {
-        let uri = `${this.root}/loans/${GUID}?appendData=true`;
+        let uri = `${this.root}/loans/${this.utils.strictURI(GUID)}?appendData=true`;
         if (loanTemplate) {
             uri += '?loanTemplate=' + loanTemplate;
         }
         return new Promise((resolve, reject) => {
             this.utils.contractGenerator(loanData, generateContract).then((contract) => {
                 request(uri, this.utils.callInfo('PATCH', contract), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body) {
-                        reject(response.body);
-                    }
-                    resolve(response);
+                    this.utils.handleResponse(resolve, reject, err, response);
                 });
             })
             .catch((err) => {
@@ -228,11 +257,8 @@ export default class EncompassConnect {
 
     deleteLoan = (GUID: string): Promise<request.RequestResponse> => {
         return new Promise((resolve, reject) => {
-            request(`${this.root}/loans/${GUID}`, this.utils.callInfo('DELETE'), (err, response, body) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(response);
+            request(`${this.root}/loans/${this.utils.strictURI(GUID)}`, this.utils.callInfo('DELETE'), (err, response, body) => {
+                this.utils.handleResponse(resolve, reject, err, response);
             });
         });
     }
@@ -250,13 +276,7 @@ export default class EncompassConnect {
                 }
             }
             request(uri, this.utils.callInfo('POST', createLoanContract && createLoanContract.loan ? createLoanContract.loan : {}), (err, response) => {
-                if (err) {
-                    reject(err);
-                }
-                if (response.body.errorCode) {
-                    reject(response.body.details);
-                }
-                resolve(response.body);
+                this.utils.handleResponse(resolve, reject, err, response, response.body);
             });
         });
     }
@@ -269,10 +289,7 @@ export default class EncompassConnect {
                 let batchOptions: any = { loanData: contract };
                 batchOptions[Array.isArray(options) ? 'loanGuids' : 'filter'] = options;
                 request(`${this.root}/loanBatch/updateRequests`, this.utils.callInfo('POST', batchOptions), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve(response);
+                    this.utils.handleResponse(resolve, reject, err, response);
                 });
             })
             .catch((err) => {
@@ -284,14 +301,8 @@ export default class EncompassConnect {
     // UNTESTED 11/5
     moveLoan = (GUID: string, folderName: string) => {
         return new Promise((resolve, reject) => {
-            request(`${this.root}/loanfolders/${folderName}/loans`, this.utils.callInfo('PATCH', { loanGuid: GUID }), (err, response) => {
-                if (err) {
-                    reject(err);
-                }
-                if (response.body.errorCode) {
-                    reject(response.body.details);
-                }
-                resolve(response);
+            request(`${this.root}/loanfolders/${this.utils.strictURI(folderName)}/loans`, this.utils.callInfo('PATCH', { loanGuid: GUID }), (err, response) => {
+                this.utils.handleResponse(resolve, reject, err, response);
             });
         });
     }
@@ -299,12 +310,9 @@ export default class EncompassConnect {
     public milestones = {
         assign: (GUID: string, milestone: string, userProperties: LoanAssociateProperties): Promise<request.RequestResponse> => {
             return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    request(`${this.root}/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(response);
+                this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
+                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
+                        this.utils.handleResponse(resolve, reject, err, response);
                     });
                 })
                 .catch((err) => {
@@ -314,15 +322,9 @@ export default class EncompassConnect {
         },
         complete: (GUID: string, milestone: string): Promise<request.RequestResponse> => {
             return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    request(`${this.root}/loans/${GUID}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        if (response.body) {
-                            reject(response.body);
-                        }
-                        resolve(response);
+                this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
+                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response) => {
+                        this.utils.handleResponse(resolve, reject, err, response);
                     });
                 })
                 .catch((err) => {
@@ -333,7 +335,7 @@ export default class EncompassConnect {
         //this not right maybe? still needs tests ran 10-26
         updateRoleFree: (GUID: string, milestone: string, userProperties: LoanAssociateProperties): Promise<request.RequestResponse> => {
             return new Promise((resolve, reject) => {
-                this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
+                this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
                     let options = {
                         loanAssociate: {
                             loanAssociateType: userProperties.loanAssociateType,
@@ -341,14 +343,8 @@ export default class EncompassConnect {
                         }
                     };
 
-                    request(`${this.root}/loans/${GUID}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        if (response.body) {
-                            reject(response.body);
-                        }
-                        resolve(response);
+                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
+                        this.utils.handleResponse(resolve, reject, err, response);
                     });
                 })
                 .catch((err) => {
@@ -359,28 +355,16 @@ export default class EncompassConnect {
         //eventually may want a type for a milestone oject
         all: (GUID: string): Promise<any[]> => {
             return new Promise((resolve, reject) => {
-                request(`${this.root}/loans/${GUID}/milestones`, this.utils.callInfo('GET'), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body.errorCode) {
-                        reject(response.body.details);
-                    }
-                    resolve(response.body);
+                request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones`, this.utils.callInfo('GET'), (err, response) => {
+                    this.utils.handleResponse(resolve, reject, err, response, response.body);
                 });
             });
         },
         associate: (GUID: string, milestone: string): Promise<LoanAssociateProperties> => {
             return new Promise((resolve, reject) => {
                 this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                    request(`${this.root}/loans/${GUID}/associates/${milestoneId}`, this.utils.callInfo('GET'), (err, response) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        if (response.body.errorCode) {
-                            reject(response.body.details);
-                        }
-                        resolve(response.body);
+                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/associates/${milestoneId}`, this.utils.callInfo('GET'), (err, response) => {
+                        this.utils.handleResponse(resolve, reject, err, response, response.body);
                     });
                 })
                 .catch((err) => {
@@ -402,48 +386,29 @@ export default class EncompassConnect {
                 let filters: any = UserInfoContract.filter;
                 Object.keys(UserInfoContract.filter).forEach((filter: string) => {
                     let filterString = `&${filter}=`;
-                    filters[filter].forEach((param: any) => {
-                        filterString += `${param},`;
-                    });
-                    uri += filterString.substring(0, filterString.length - 1);
+                    filterString += this.utils.strictURI(filters[filter]);
+                    uri += filterString;
                 });
             }
             return new Promise((resolve, reject) => {
                 request(uri, this.utils.callInfo('GET'), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body.errorCode) {
-                        reject(response.body.details);
-                    }
-                    resolve(response.body);
+                    this.utils.handleResponse(resolve, reject, err, response, response.body);
                 });
             });
         },
         profile: (userId: string): Promise<UserProfile> => {
             return new Promise((resolve, reject) => {
-                request(`${this.root}/company/users/${userId}`, this.utils.callInfo('GET'), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body.errorCode) {
-                        reject(response.body.details);
-                    }
-                    resolve(response.body);
+                request(`${this.root}/company/users/${this.utils.strictURI(userId)}`, this.utils.callInfo('GET'), (err, response) => {
+                    this.utils.handleResponse(resolve, reject, err, response, response.body);
+                    console.log(this.utils.strictURI(userId))
                 });
             });
         },
         licenses: (userId: string, state?: string): Promise<LicenseInformation[]> => {
-            let uri = `${this.root}/company/users/${userId}/licenses`;
+            let uri = `${this.root}/company/users/${this.utils.strictURI(userId)}/licenses`;
             return new Promise((resolve, reject) => {
-                request(state ? uri + `?state=${state}` : uri, this.utils.callInfo('GET'), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body.errorCode) {
-                        reject(response.body.details);
-                    }
-                    resolve(response.body);
+                request(state ? uri + `?state=${this.utils.strictURI(state)}` : uri, this.utils.callInfo('GET'), (err, response) => {
+                    this.utils.handleResponse(resolve, reject, err, response, response.body);
                 });
             });
         }
