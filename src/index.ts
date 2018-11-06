@@ -1,6 +1,7 @@
 import * as request from 'request';
-import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile } from './encompassInterfaces';
+import { PipeLineContract, LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile, CreateLoanContract } from './encompassInterfaces';
 import { RequestOptions } from 'https';
+import { rejects } from 'assert';
 
 export default class EncompassConnect {
     clientId: string;
@@ -74,6 +75,9 @@ export default class EncompassConnect {
                 request(`${this.root}/schema/loan/contractGenerator`, this.utils.callInfo('POST', fields), (err, response) => {
                     if (err) {
                         reject(err);
+                    }
+                    if (response.body.errorCode) {
+                        reject(response.body.details);
                     }
                     resolve(response.body);
                 });
@@ -233,7 +237,29 @@ export default class EncompassConnect {
         });
     }
 
-    //still need create
+    createLoan = (createLoanContract?: CreateLoanContract) => {
+        return new Promise((resolve, reject) => {
+            let uri = `${this.root}/loans`;
+            if (createLoanContract) {
+                uri += `?view=${createLoanContract.view ? createLoanContract.view : 'id'}`;
+                if (createLoanContract.loanFolder) {
+                    uri += `&loanFolder=${createLoanContract.loan}`;
+                }
+                if (createLoanContract.loanTemplate) {
+                    uri += `&loanTemplate=${createLoanContract.loanTemplate}`;
+                }
+            }
+            request(uri, this.utils.callInfo('POST', createLoanContract && createLoanContract.loan ? createLoanContract.loan : {}), (err, response) => {
+                if (err) {
+                    reject(err);
+                }
+                if (response.body.errorCode) {
+                    reject(response.body.details);
+                }
+                resolve(response.body);
+            });
+        });
+    }
     //end loan CRUD
 
     //needs testing as well 10/26
@@ -253,6 +279,21 @@ export default class EncompassConnect {
                 reject(err);
             })
         })
+    }
+
+    // UNTESTED 11/5
+    moveLoan = (GUID: string, folderName: string) => {
+        return new Promise((resolve, reject) => {
+            request(`${this.root}/loanfolders/${folderName}/loans`, this.utils.callInfo('PATCH', { loanGuid: GUID }), (err, response) => {
+                if (err) {
+                    reject(err);
+                }
+                if (response.body.errorCode) {
+                    reject(response.body.details);
+                }
+                resolve(response);
+            });
+        });
     }
 
     public milestones = {

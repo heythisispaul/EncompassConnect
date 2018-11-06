@@ -82,3 +82,10 @@ export interface LicenseInformation {
   issueDate?: string | Date;
   startDate?: string | Date;
 }
+
+export interface CreateLoanContract {
+  view?: "entity" | "id";
+  loanTemplate?: string;
+  loanFolder?: string;
+  loan?: any;
+}

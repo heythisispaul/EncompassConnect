@@ -74,7 +74,7 @@ encompass.authenticate('yourUsername', 'yourPassword').then(() => {
 });
 ```
 
-Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. Keep in mind the second example is less taxing on the server, it requires one less call to Encompass and is generally recommended if the fields being updated are constant. Note that this same functionality exists in the `.batchUpdate()` method as well.
+Either option will update the loan, just be sure you're toggling which functionality you need based off how your incoming loan data is structured. **If you're updating custom fields, you must supply the data in a preformatted contract structure.** Keep in mind the second example is less taxing on the server, it requires one less call to Encompass and is generally recommended if the fields being updated are constant. Note that this same functionality exists in the `.batchUpdate()` method as well.
 
 ### Viewing a Pipeline
 Pipeline Data can be pulled with the `.pipeLineView()` method. This method requires a Pipeline Contract object as its first parameter, and can optionally take a second parameter to specify a limit to how many results you would like. The pipeline contract determines which loans to retrieve and requires one of the two properties:
@@ -217,6 +217,16 @@ Parameters:
 
 ### Working with Loans
 
+#### .createLoan(_createLoanContract?_)
+Creates a new loan in Encompass. By default the loan will appear in the 'My Pipeline' folder of the individual of the user who was issued the token. This method returns a promise that resolves the GUID of the newly created loan, however it can also include more information.
+
+Parameters:
+* createLoanContract: createLoanContract (_optional_) - An object that provides additional details when creating a new loan. It has four properties (all are optional):
+    * `view`: 'entity' | 'id' - determines if the response value will contain just the GUID or all the loan information from the new loan (defaults to 'id').
+    * `loanTemplate`: string - The URL to the loan template for the loan to be created.
+    * `loanFolder`: string - The loan folder name to place the loan (defaults to 'My Pipeline' if not provided).
+    * `loan`: any - An object that follows the structure of the loan object model. This object will populate your new loan with the data provided.
+
 #### .getGuid(_loanNumber_)
 Takes in a loan number and returns the loan GUID as the resolution to the promise.
 
@@ -251,6 +261,8 @@ Pulls an array of loans based off the filter or list of GUIDs supplied. Returns 
 Parameters:
 * options: PipeLineContract - An object that determines which loans and fields being pulled. Check out the [example](https://github.com/heythisispaul/EncompassConnect#viewing-a-pipeline) for additional details.
 * limit: number _(optional)_ - the maximum results to return from the call. The default is 1000, but may vary depending on the amount of data being requested per loan. 
+
+
 
 ### Milestones
 
@@ -288,8 +300,8 @@ Paramters:
 Pulls the user profile information of your organization's users. Can optionally take an object to filter the results. Returns a promise which resolves the array of users.
 
 Parameters: 
-* userInfoContract: UserInfoContract (_optional_) - An object that acts as a filters the user profiles returned. Includes the following properties: 
-    * `viewEmailSignature`: boolean - the **only** required property
+* userInfoContract: UserInfoContract (_optional_) - An object that acts as a filters the user profiles returned. Includes the following properties (all are optional): 
+    * `viewEmailSignature`: boolean - determines if the email signature HTML will be returned with the results (defaults to false).
     * `start`: number - Allows to optionally skip over records.
     * `limit`: number
     * `filter` - Can take the following properties. Each property takes an array of strings of the property you would like to filter to:
