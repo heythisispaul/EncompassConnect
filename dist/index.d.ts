@@ -1,7 +1,5 @@
-/// <reference types="node" />
 import * as request from 'request';
 import { LoanAssociateProperties, PipeLineFilter, UserInfoContract, LicenseInformation, UserProfile, CreateLoanContract, FilterPipeLineContract, LoanGuidsPipeLineContract } from './encompassInterfaces';
-import { RequestOptions } from 'https';
 export default class EncompassConnect {
     clientId: string;
     APIsecret: string;
@@ -9,15 +7,7 @@ export default class EncompassConnect {
     token: string;
     constructor(clientId: string, APIsecret: string, instanceId: string);
     private root;
-    utils: {
-        handleResponse: (resolve: any, reject: any, err: Error, response: request.Response, override?: any) => void;
-        strictURI: (uriComponent: string) => string;
-        callInfo: (method: string, body?: any) => RequestOptions;
-        getMilestoneId: (GUID: string, milestone: string) => Promise<string>;
-        tokenOptions: (method: string, token?: string | undefined, username?: string | undefined, password?: string | undefined) => any;
-        numberCheck: (value: string | number) => number | undefined;
-        contractGenerator: (fields: any, generate: boolean) => Promise<request.Response>;
-    };
+    private utils;
     authenticate: (username: string, password: string) => Promise<request.Response>;
     tokenIntrospect: (token?: string | undefined) => Promise<request.Response>;
     revokeToken: (token?: string | undefined) => Promise<request.Response>;

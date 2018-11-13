@@ -9,14 +9,14 @@ class EncompassConnect {
                 if (err) {
                     reject(err);
                 }
-                if (response.body && response.body.errorCode) {
+                //if the response includes an error code or the summary is equal to 'Conflict', reject it:
+                if (response.body && (response.body.errorCode || (response.body.summary && response.body.summary == 'Conflict'))) {
                     reject(response.body.details);
                 }
                 resolve(override ? override : response);
             },
             strictURI: (uriComponent) => {
-                let cleaned = uriComponent.replace(/[{}+-:`"!'()*&<>]/g, '');
-                return cleaned;
+                return uriComponent.replace(/[!@#$%^&*]/g, '');
             },
             callInfo: (method, body) => {
                 let options = {
@@ -35,18 +35,15 @@ class EncompassConnect {
             },
             getMilestoneId: (GUID, milestone) => {
                 return new Promise((resolve, reject) => {
-                    let milestoneId = '';
                     request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
                         if (err) {
                             reject(err);
                         }
-                        try {
-                            milestoneId = body.filter((ms) => ms.milestoneName == milestone)[0].id;
-                            resolve(milestoneId);
+                        let msMatch = body.filter((ms) => ms.milestoneName == milestone);
+                        if (msMatch.length > 0) {
+                            resolve(msMatch[0].id);
                         }
-                        catch (_a) {
-                            reject('Could not find milestone ID based off milestone/loan provided. Ensure the milestone entered matches the milestone name in Encompass.');
-                        }
+                        reject(`Could not find a matching Milestone ID for GUID: ${GUID} / Milestone: ${milestone}`);
                     });
                 });
             },
