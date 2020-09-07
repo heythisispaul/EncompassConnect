@@ -1,4 +1,7 @@
 node_modules/
-dist/test.d.ts
-dist/test.js
+dist/
 test.ts
+.vscode
+.tsconfig.json
+.eslintrc.js
+*.tgz

@@ -1,29 +1,35 @@
-export interface PipeLineContract {
-    fields: string[];
+export interface sortOrderContract {
+    canonicalName: string;
+    order: 'asc' | 'desc';
+}
+export interface PipeLineRequest {
+    fields?: string[];
     sortOrder?: sortOrderContract[];
 }
-export interface LoanGuidsPipeLineContract extends PipeLineContract {
+export interface LoanGuidsPipeLineContract extends PipeLineRequest {
     loanGuids: string[];
-}
-export interface FilterPipeLineContract extends PipeLineContract {
-    filter: PipeLineFilter;
-}
-export interface PipeLineFilter {
-    operator: "and" | "or";
-    terms: PipeLineTerms[];
 }
 export interface PipeLineTerms {
     canonicalName: string;
-    matchType: "greaterThanOrEquals" | "exact" | "greaterThan" | "isNotEmpty" | "isEmpty" | "lessThan" | "lessThanOrEquals" | "equals" | "notEquals" | "startsWith" | "contains";
+    matchType: 'greaterThanOrEquals' | 'exact' | 'greaterThan' | 'isNotEmpty' | 'isEmpty' | 'lessThan' | 'lessThanOrEquals' | 'equals' | 'notEquals' | 'startsWith' | 'contains';
     value?: string | number | Date;
-    precision?: "exact" | "day" | "month" | "year" | "recurring";
+    precision?: 'exact' | 'day' | 'month' | 'year' | 'recurring';
 }
-export interface sortOrderContract {
-    canonicalName: string;
-    order: "asc" | "desc";
+export interface PipeLineFilter {
+    operator: 'and' | 'or';
+    terms: PipeLineTerms[];
+}
+export interface FilterPipeLineContract extends PipeLineRequest {
+    filter: PipeLineFilter;
+}
+export declare type PipeLineContract = LoanGuidsPipeLineContract | FilterPipeLineContract;
+export interface BatchLoanUpdateContract {
+    filter?: PipeLineFilter;
+    loanGuids?: string[];
+    loanData: any;
 }
 export interface LoanAssociateProperties {
-    loanAssociateType: "user" | "group";
+    loanAssociateType: 'user' | 'group';
     id: string;
     name?: string;
     phone?: string;
@@ -79,8 +85,47 @@ export interface LicenseInformation {
     startDate?: string | Date;
 }
 export interface CreateLoanContract {
-    view?: "entity" | "id";
+    view?: 'entity' | 'id';
     loanTemplate?: string;
     loanFolder?: string;
     loan?: any;
+}
+export interface EncompassConnectConstructor {
+    clientId: string;
+    APIsecret: string;
+    instanceId: string;
+    username?: string;
+    password?: string;
+}
+export interface EncompassConnect {
+    clientId: string;
+    APIsecret: string;
+    instanceId: string;
+    setToken: (newToken: string) => void;
+    fetchWithRetry: (path: string, options: RequestInit, customOptions: any) => void;
+    getToken: (username: string, passsord: string) => void;
+    username?: string;
+    password?: string;
+    token?: string;
+}
+export interface InternalRequestOptions {
+    isRetry?: boolean;
+    isNotJson?: boolean;
+}
+export interface AssignMilestone {
+    loanGuid: string;
+    milestone: string;
+    userId: string;
+}
+export interface UpdateMilestone {
+    loanGuid: string;
+    milestone: string;
+    options: any;
+    action?: 'finish' | 'unfinish';
+}
+export interface LoanUpdateOptions {
+    appendData: boolean;
+    persistent: 'transient' | 'permanent';
+    view: 'entity' | 'id';
+    loanTemplate?: string;
 }

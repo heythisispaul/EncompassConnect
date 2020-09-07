@@ -1,388 +1,208 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _clientId, _APIsecret, _instanceId, _password, _token;
 Object.defineProperty(exports, "__esModule", { value: true });
-const request = require("request");
+/* eslint-disable camelcase */
+const node_fetch_1 = require("node-fetch");
 class EncompassConnect {
-    constructor(clientId, APIsecret, instanceId) {
-        this.root = 'https://api.elliemae.com/encompass/v1';
-        this.utils = {
-            handleResponse: (resolve, reject, err, response, override) => {
-                if (err) {
-                    reject(err);
-                }
-                //if the response includes an error code or the summary is equal to 'Conflict', reject it:
-                if (response.body && (response.body.errorCode || (response.body.summary && response.body.summary == 'Conflict'))) {
-                    reject(response.body.details);
-                }
-                resolve(override ? override : response);
-            },
-            strictURI: (uriComponent) => {
-                return uriComponent.replace(/[!@#$%^&*]/g, '');
-            },
-            callInfo: (method, body) => {
-                let options = {
-                    method: method,
-                    headers: {
-                        "Authorization": 'Bearer ' + this.token
+    constructor({ clientId, APIsecret, instanceId, username, password, }) {
+        _clientId.set(this, void 0);
+        _APIsecret.set(this, void 0);
+        _instanceId.set(this, void 0);
+        _password.set(this, void 0);
+        _token.set(this, void 0);
+        this.loans = {
+            getGuidByLoanNumber: (loanNumber) => __awaiter(this, void 0, void 0, function* () {
+                const [loanResult] = yield this.viewPipeline({
+                    filter: {
+                        operator: 'and',
+                        terms: [
+                            {
+                                canonicalName: 'Loan.LoanNumber',
+                                matchType: 'exact',
+                                value: loanNumber,
+                            },
+                        ],
                     },
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    json: true
+                });
+                return loanResult ? loanResult.loanGuid : null;
+            }),
+            get: (guid, entities) => __awaiter(this, void 0, void 0, function* () {
+                const url = `/encompass/v1/loans/${guid}${entities ? `?entities=${entities.toString()}` : ''}`;
+                const data = yield this.fetchWithRetry(url);
+                return data;
+            }),
+            update: (guid, loanData, options) => __awaiter(this, void 0, void 0, function* () {
+                const defaultOptions = [
+                    ['appendData', 'false'],
+                    ['persistent', 'transient'],
+                    ['view', 'entity'],
+                ];
+                // @ts-ignore
+                const queryOptions = new URLSearchParams(options || defaultOptions).toString();
+                const url = `/encompass/v1/loans/${guid}?${queryOptions}`;
+                const fetchOptions = {
+                    method: 'PATCH',
+                    body: JSON.stringify(loanData),
                 };
-                if (body) {
-                    options.body = body;
-                }
-                return options;
-            },
-            getMilestoneId: (GUID, milestone) => {
-                return new Promise((resolve, reject) => {
-                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones`, this.utils.callInfo('GET'), (err, response, body) => {
-                        if (err) {
-                            reject(err);
-                        }
-                        let msMatch = body.filter((ms) => ms.milestoneName == milestone);
-                        if (msMatch.length > 0) {
-                            resolve(msMatch[0].id);
-                        }
-                        reject(`Could not find a matching Milestone ID for GUID: ${GUID} / Milestone: ${milestone}`);
-                    });
-                });
-            },
-            tokenOptions: (method, token, username, password) => {
-                let dataString = `token=${this.token}`;
-                let auth = "Basic " + Buffer.from(this.clientId + ":" + this.APIsecret).toString('base64');
-                if (username || password) {
-                    dataString = `grant_type=password&username=${username}@encompass:${this.instanceId}&password=${password}`;
-                }
-                return {
-                    method: method,
-                    json: true,
-                    headers: {
-                        "Authorization": auth,
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: dataString
-                };
-            },
-            numberCheck: (value) => {
-                if (typeof (value) == 'number') {
-                    return value;
-                }
-                let numregex = /^[0-9]+([,.][0-9]+)?$/g;
-                return numregex.test(value) ? parseFloat(value) : undefined;
-            },
-            //needs testing as of 11/6
-            contractGenerator: (fields, generate) => {
-                return new Promise((resolve, reject) => {
-                    let entryFields = Object.assign({}, fields);
-                    let customReturn = [];
-                    if (!generate) {
-                        resolve(fields);
-                    }
-                    if (fields.customFields) {
-                        let customFields = fields.customFields;
-                        delete entryFields.customFields;
-                        Object.entries(customFields).forEach((cf) => {
-                            let cfObj = {
-                                fieldName: cf[0],
-                                stringValue: cf[1].toString()
-                            };
-                            if (this.utils.numberCheck(cf[1])) {
-                                cfObj.numericValue = this.utils.numberCheck(cf[1]);
-                            }
-                            customReturn.push(cfObj);
-                        });
-                    }
-                    request(`${this.root}/schema/loan/contractGenerator`, this.utils.callInfo('POST', entryFields), (err, response) => {
-                        // this.utils.handleResponse(resolve, reject, err, response, response.body);
-                        if (err) {
-                            reject(err);
-                        }
-                        if (response.body && response.body.errorCode) {
-                            reject(response.body.details);
-                        }
-                        if (fields.customFields) {
-                            response.body.customFields = customReturn;
-                            resolve(response.body);
-                        }
-                        resolve(response.body);
-                    });
-                });
-            }
-        };
-        this.authenticate = (username, password) => {
-            return new Promise((resolve, reject) => {
-                request('https://api.elliemae.com/oauth2/v1/token', this.utils.tokenOptions('POST', undefined, username, password), (err, response, body) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body.access_token) {
-                        this.token = response.body.access_token;
-                        resolve(response);
-                    }
-                    reject('Token request was not rejected - however no token was returned');
-                });
-            });
-        };
-        this.tokenIntrospect = (token) => {
-            return new Promise((resolve, reject) => {
-                request(`https://api.elliemae.com/oauth2/v1/token/introspection`, this.utils.tokenOptions('POST', token ? token : this.token), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve(response);
-                });
-            });
-        };
-        this.revokeToken = (token) => {
-            return new Promise((resolve, reject) => {
-                request('https://api.elliemae.com/oauth2/v1/token/revocation', this.utils.tokenOptions('POST', token ? token : this.token), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve(response);
-                });
-            });
-        };
-        this.storeToken = (token) => {
-            this.token = token;
-        };
-        this.customRequest = (uri, method, body) => {
-            return new Promise((resolve, reject) => {
-                request(uri, this.utils.callInfo(method ? method : 'GET', body ? body : undefined), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve(response);
-                });
-            });
-        };
-        this.getGuid = (loanNumber) => {
-            let guidFilter = {
-                filter: {
-                    operator: "and",
-                    terms: [{
-                            canonicalName: "Loan.LoanNumber",
-                            value: loanNumber,
-                            matchType: "exact"
-                        }]
-                },
-                fields: ["Loan.GUID"]
-            };
-            return new Promise((resolve, reject) => {
-                request(`${this.root}/loanPipeline/`, this.utils.callInfo('POST', guidFilter), (err, response) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (response.body && response.body.length > 0) {
-                        resolve(response.body[0].loanGuid);
-                    }
-                    else {
-                        reject(`Loan ${loanNumber} did not return a GUID.`);
-                    }
-                });
-            });
-        };
-        //not yet in readme
-        this.pipeLineView = (options, limit) => {
-            let requestOptions = this.utils.callInfo('POST', options);
-            let uri = `${this.root}/loanPipeline/`;
-            if (limit) {
-                uri += `?limit=${limit}`;
-            }
-            return new Promise((resolve, reject) => {
-                request(uri, requestOptions, (err, response) => {
-                    this.utils.handleResponse(resolve, reject, err, response, response.body);
-                });
-            });
-        };
-        //loan CRUD
-        this.getLoan = (GUID, loanEntities) => {
-            let uri = `${this.root}/loans/${this.utils.strictURI(GUID)}`;
-            if (loanEntities) {
-                uri += '?entities=';
-                loanEntities.forEach((item) => {
-                    uri += encodeURIComponent(item + ',');
-                });
-                uri = uri.substring(0, uri.length - 1);
-            }
-            return new Promise((resolve, reject) => {
-                request(uri, this.utils.callInfo('GET'), (err, response) => {
-                    this.utils.handleResponse(resolve, reject, err, response, response.body);
-                });
-            });
-        };
-        this.updateLoan = (GUID, loanData, generateContract = true, loanTemplate) => {
-            let uri = `${this.root}/loans/${this.utils.strictURI(GUID)}?appendData=true`;
-            if (loanTemplate) {
-                uri += '?loanTemplate=' + loanTemplate;
-            }
-            return new Promise((resolve, reject) => {
-                this.utils.contractGenerator(loanData, generateContract).then((contract) => {
-                    request(uri, this.utils.callInfo('PATCH', contract), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response);
-                    });
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        this.deleteLoan = (GUID) => {
-            return new Promise((resolve, reject) => {
-                request(`${this.root}/loans/${this.utils.strictURI(GUID)}`, this.utils.callInfo('DELETE'), (err, response, body) => {
-                    this.utils.handleResponse(resolve, reject, err, response);
-                });
-            });
-        };
-        this.createLoan = (createLoanContract) => {
-            return new Promise((resolve, reject) => {
-                let uri = `${this.root}/loans`;
-                if (createLoanContract) {
-                    uri += `?view=${createLoanContract.view ? createLoanContract.view : 'id'}`;
-                    if (createLoanContract.loanFolder) {
-                        uri += `&loanFolder=${createLoanContract.loan}`;
-                    }
-                    if (createLoanContract.loanTemplate) {
-                        uri += `&loanTemplate=${createLoanContract.loanTemplate}`;
-                    }
-                }
-                request(uri, this.utils.callInfo('POST', createLoanContract && createLoanContract.loan ? createLoanContract.loan : {}), (err, response) => {
-                    this.utils.handleResponse(resolve, reject, err, response, response.body);
-                });
-            });
-        };
-        //end loan CRUD
-        //needs testing as well 10/26
-        this.batchUpdate = (options, loanData, generateContract = true) => {
-            return new Promise((resolve, reject) => {
-                this.utils.contractGenerator(loanData, generateContract).then((contract) => {
-                    let batchOptions = { loanData: contract };
-                    batchOptions[Array.isArray(options) ? 'loanGuids' : 'filter'] = options;
-                    request(`${this.root}/loanBatch/updateRequests`, this.utils.callInfo('POST', batchOptions), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response);
-                    });
-                })
-                    .catch((err) => {
-                    reject(err);
-                });
-            });
-        };
-        // UNTESTED 11/5
-        this.moveLoan = (GUID, folderName) => {
-            return new Promise((resolve, reject) => {
-                request(`${this.root}/loanfolders/${this.utils.strictURI(folderName)}/loans`, this.utils.callInfo('PATCH', { loanGuid: GUID }), (err, response) => {
-                    this.utils.handleResponse(resolve, reject, err, response);
-                });
-            });
+                const data = yield this.fetchWithRetry(url, fetchOptions);
+                return data;
+            }),
+            delete: (guid) => __awaiter(this, void 0, void 0, function* () {
+                yield this.fetchWithRetry(`/encompass/v1/loans/${guid}`, { method: 'DELETE' }, { isNotJson: true });
+            }),
         };
         this.milestones = {
-            assign: (GUID, milestone, userProperties) => {
-                return new Promise((resolve, reject) => {
-                    this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
-                        request(`${this.root}/loans/${this.utils.strictURI(GUID)}/associates/${milestoneId}`, this.utils.callInfo('PUT', userProperties), (err, response) => {
-                            this.utils.handleResponse(resolve, reject, err, response);
-                        });
-                    })
-                        .catch((err) => {
-                        reject(err);
-                    });
-                });
-            },
-            complete: (GUID, milestone) => {
-                return new Promise((resolve, reject) => {
-                    this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
-                        request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones/${milestoneId}?action=finish`, this.utils.callInfo('PATCH', { milestoneName: milestone }), (err, response) => {
-                            this.utils.handleResponse(resolve, reject, err, response);
-                        });
-                    })
-                        .catch((err) => {
-                        reject(err);
-                    });
-                });
-            },
-            //this not right maybe? still needs tests ran 10-26
-            updateRoleFree: (GUID, milestone, userProperties) => {
-                return new Promise((resolve, reject) => {
-                    this.utils.getMilestoneId(this.utils.strictURI(GUID), milestone).then((milestoneId) => {
-                        let options = {
-                            loanAssociate: {
-                                loanAssociateType: userProperties.loanAssociateType,
-                                userId: userProperties.id
-                            }
-                        };
-                        request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestoneFreeRoles/${milestoneId}`, this.utils.callInfo('PATCH', options), (err, response) => {
-                            this.utils.handleResponse(resolve, reject, err, response);
-                        });
-                    })
-                        .catch((err) => {
-                        reject(err);
-                    });
-                });
-            },
-            //eventually may want a type for a milestone oject
-            all: (GUID) => {
-                return new Promise((resolve, reject) => {
-                    request(`${this.root}/loans/${this.utils.strictURI(GUID)}/milestones`, this.utils.callInfo('GET'), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response, response.body);
-                    });
-                });
-            },
-            associate: (GUID, milestone) => {
-                return new Promise((resolve, reject) => {
-                    this.utils.getMilestoneId(GUID, milestone).then((milestoneId) => {
-                        request(`${this.root}/loans/${this.utils.strictURI(GUID)}/associates/${milestoneId}`, this.utils.callInfo('GET'), (err, response) => {
-                            this.utils.handleResponse(resolve, reject, err, response, response.body);
-                        });
-                    })
-                        .catch((err) => {
-                        reject(err);
-                    });
-                });
-            }
-        };
-        this.users = {
-            list: (UserInfoContract) => {
-                let uri = `${this.root}/company/users`;
-                if (UserInfoContract) {
-                    uri += `?viewEmailSignature=${UserInfoContract.viewEmailSignature ? 'true' : 'false'}`;
-                    uri += UserInfoContract.hasOwnProperty('start') ? `&start=${UserInfoContract.start}` : '';
-                    uri += UserInfoContract.hasOwnProperty('limit') ? `&limit=${UserInfoContract.limit}` : '';
+            get: (guid) => __awaiter(this, void 0, void 0, function* () {
+                const milestones = yield this.fetchWithRetry(`/encompass/v1/loans/${guid}/milestones`);
+                return milestones;
+            }),
+            assign: ({ milestone, userId, loanGuid, }) => __awaiter(this, void 0, void 0, function* () {
+                const milestoneData = yield this.milestones.get(loanGuid);
+                const matchingMilestone = milestoneData
+                    .find(({ milestoneName }) => milestone === milestoneName);
+                if (!matchingMilestone) {
+                    throw new Error(`No milestone found for loan ${loanGuid} matching name "${milestone}"`);
                 }
-                if (UserInfoContract && UserInfoContract.filter) {
-                    let filters = UserInfoContract.filter;
-                    Object.keys(UserInfoContract.filter).forEach((filter) => {
-                        let filterString = `&${filter}=`;
-                        filterString += this.utils.strictURI(filters[filter]);
-                        uri += filterString;
-                    });
+                const { id } = matchingMilestone;
+                const fetchOptions = {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        loanAssociateType: 'User',
+                        id: userId,
+                    }),
+                };
+                yield this.fetchWithRetry(`/encompass/v1/loans/${loanGuid}/associates/${id}`, fetchOptions, { isNotJson: true });
+            }),
+            update: ({ loanGuid, milestone, options = {}, action, }) => __awaiter(this, void 0, void 0, function* () {
+                const milestoneData = yield this.milestones.get(loanGuid);
+                const matchingMilestone = milestoneData
+                    .find(({ milestoneName }) => milestone === milestoneName);
+                if (!matchingMilestone) {
+                    throw new Error(`No milestone found for loan ${loanGuid} matching name "${milestone}"`);
                 }
-                return new Promise((resolve, reject) => {
-                    request(uri, this.utils.callInfo('GET'), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response, response.body);
-                    });
-                });
-            },
-            profile: (userId) => {
-                return new Promise((resolve, reject) => {
-                    request(`${this.root}/company/users/${this.utils.strictURI(userId)}`, this.utils.callInfo('GET'), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response, response.body);
-                        console.log(this.utils.strictURI(userId));
-                    });
-                });
-            },
-            licenses: (userId, state) => {
-                let uri = `${this.root}/company/users/${this.utils.strictURI(userId)}/licenses`;
-                return new Promise((resolve, reject) => {
-                    request(state ? uri + `?state=${this.utils.strictURI(state)}` : uri, this.utils.callInfo('GET'), (err, response) => {
-                        this.utils.handleResponse(resolve, reject, err, response, response.body);
-                    });
-                });
-            }
+                const { id } = matchingMilestone;
+                const fetchOptions = {
+                    method: 'PATCH',
+                    body: JSON.stringify(options),
+                };
+                const uri = `/encompass/v1/loans/${loanGuid}/milestones/${id}${action ? `?action=${action}` : ''}`;
+                yield this.fetchWithRetry(uri, fetchOptions, { isNotJson: true });
+            }),
         };
-        this.clientId = clientId;
-        this.APIsecret = APIsecret;
-        this.instanceId = instanceId;
-        this.token = '';
+        __classPrivateFieldSet(this, _clientId, clientId);
+        __classPrivateFieldSet(this, _APIsecret, APIsecret);
+        __classPrivateFieldSet(this, _instanceId, instanceId);
+        __classPrivateFieldSet(this, _password, password || '');
+        __classPrivateFieldSet(this, _token, '');
+        this.username = username || '';
+        this.base = 'https://api.elliemae.com';
+    }
+    setToken(token) {
+        __classPrivateFieldSet(this, _token, token);
+    }
+    withTokenHeader(headers = {}) {
+        return Object.assign(Object.assign({}, headers), { Authorization: `Bearer ${__classPrivateFieldGet(this, _token)}` });
+    }
+    fetchWithRetry(path, options = {}, customOptions = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { isRetry, isNotJson } = customOptions;
+            const failedAuthError = new Error(`Token invalid. ${!isRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`);
+            try {
+                if (!__classPrivateFieldGet(this, _token)) {
+                    yield this.getToken();
+                }
+                const url = `${this.base}${path}`;
+                const optionsWithToken = Object.assign(Object.assign({}, options), { headers: this.withTokenHeader(options.headers) });
+                const response = yield node_fetch_1.default(url, optionsWithToken);
+                if (response.status === 401) {
+                    throw failedAuthError;
+                }
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                return isNotJson ? response : yield response.json();
+            }
+            catch (error) {
+                if (!isRetry && error === failedAuthError) {
+                    this.setToken(null);
+                    return this.fetchWithRetry(path, options, Object.assign(Object.assign({}, customOptions), { isRetry: true }));
+                }
+                throw error;
+            }
+        });
+    }
+    getToken(username, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = new URLSearchParams({
+                grant_type: 'password',
+                username: `${username || this.username}@encompass:${__classPrivateFieldGet(this, _instanceId)}`,
+                password: password || __classPrivateFieldGet(this, _password),
+                client_id: __classPrivateFieldGet(this, _clientId),
+                client_secret: __classPrivateFieldGet(this, _APIsecret),
+            }).toString();
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body,
+                redirect: 'follow',
+            };
+            const response = yield node_fetch_1.default(`${this.base}/oauth2/v1/token`, requestOptions);
+            const { access_token } = yield response.json();
+            this.setToken(access_token);
+        });
+    }
+    getCanonicalNames() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const canonicalNames = yield this.fetchWithRetry('/encompass/v1/loanPipeline/fieldDefinitions');
+            return canonicalNames;
+        });
+    }
+    viewPipeline(options, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const uri = `/encompass/v1/loanPipeline${limit ? `?limit=${limit}` : ''}`;
+            const pipeLineData = yield this.fetchWithRetry(uri, {
+                method: 'POST',
+                headers: this.withTokenHeader(),
+                body: JSON.stringify(options),
+            });
+            return pipeLineData;
+        });
+    }
+    batchLoanUpdate(options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = yield this.fetchWithRetry('/encompass/v1/loanBatch/updateRequests', {
+                method: 'POST',
+                body: JSON.stringify(options),
+            }, { isNotJson: true });
+            return response && response.headers && response.headers.location
+                ? response.headers.location.split('/').reverse()[0]
+                : null;
+        });
     }
 }
+_clientId = new WeakMap(), _APIsecret = new WeakMap(), _instanceId = new WeakMap(), _password = new WeakMap(), _token = new WeakMap();
 exports.default = EncompassConnect;
