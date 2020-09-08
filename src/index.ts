@@ -95,6 +95,7 @@ class EncompassConnect {
   }
 
   async getToken(username?: string, password?: string): Promise<void> {
+    // @ts-ignore
     const body: string = new URLSearchParams({
       grant_type: 'password',
       username: `${username || this.username}@encompass:${this.#instanceId}`,

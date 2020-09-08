@@ -114,18 +114,6 @@ export interface EncompassConnectConstructor {
   password?: string;
 }
 
-export interface EncompassConnect {
-  clientId: string;
-  APIsecret: string;
-  instanceId: string;
-  setToken: (newToken: string) => void;
-  fetchWithRetry: (path: string, options: RequestInit, customOptions: any) => void;
-  getToken: (username: string, passsord: string) => void;
-  username?: string;
-  password?: string;
-  token?: string;
-}
-
 export interface InternalRequestOptions {
   isRetry?: boolean;
   isNotJson?: boolean;

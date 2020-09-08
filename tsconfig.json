@@ -1,11 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./dist",
-    "lib": ["es2020", "es7", "es6", "dom"],
-    "strict": true,
-    "allowSyntheticDefaultImports": true
-  }
+  "extends": "@tsconfig/node12/tsconfig.json"
 }

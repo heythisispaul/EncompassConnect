@@ -1,4 +1,5 @@
-dist/test.js
-dist/test.d.ts
 src/
-README.md
+.vscode
+*.map
+rollup.config.js
+tsconfig.json
