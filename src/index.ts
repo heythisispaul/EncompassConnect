@@ -12,7 +12,10 @@ import {
   AssignMilestone,
   UpdateMilestone,
   LoanUpdateOptions,
+  batchUpdateStatus,
+  updateLoanWithGenerateContract,
 } from './encompassInterfaces';
+import { massageCustomFields } from './utils';
 
 class EncompassConnect {
   #clientId: string;
@@ -29,6 +32,8 @@ class EncompassConnect {
 
   base: string;
 
+  authBase: string;
+
   constructor({
     clientId,
     APIsecret,
@@ -42,7 +47,8 @@ class EncompassConnect {
     this.#password = password || '';
     this.#token = '';
     this.username = username || '';
-    this.base = 'https://api.elliemae.com';
+    this.base = 'https://api.elliemae.com/encompass/v1';
+    this.authBase = 'https://api.elliemae.com';
   }
 
   setToken(token:string | null): void {
@@ -62,6 +68,7 @@ class EncompassConnect {
     customOptions: InternalRequestOptions = {},
   ): Promise<any> {
     const { isRetry, isNotJson } = customOptions;
+    const shouldRetry = !isRetry && this.username && this.#password;
     const failedAuthError = new Error(
       `Token invalid. ${!isRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`,
     );
@@ -83,7 +90,7 @@ class EncompassConnect {
       }
       return isNotJson ? response : await response.json();
     } catch (error) {
-      if (!isRetry && error === failedAuthError) {
+      if (shouldRetry && error === failedAuthError) {
         this.setToken(null);
         return this.fetchWithRetry(path, options, {
           ...customOptions,
@@ -113,18 +120,18 @@ class EncompassConnect {
       redirect: 'follow',
     };
 
-    const response = await fetch(`${this.base}/oauth2/v1/token`, requestOptions);
+    const response = await fetch(`${this.authBase}/oauth2/v1/token`, requestOptions);
     const { access_token } = await response.json();
     this.setToken(access_token);
   }
 
   async getCanonicalNames(): Promise<any> {
-    const canonicalNames = await this.fetchWithRetry('/encompass/v1/loanPipeline/fieldDefinitions');
+    const canonicalNames = await this.fetchWithRetry('/loanPipeline/fieldDefinitions');
     return canonicalNames;
   }
 
   async viewPipeline(options: PipeLineContract, limit?: number) {
-    const uri = `/encompass/v1/loanPipeline${limit ? `?limit=${limit}` : ''}`;
+    const uri = `/loanPipeline${limit ? `?limit=${limit}` : ''}`;
     const pipeLineData = await this.fetchWithRetry(uri, {
       method: 'POST',
       headers: this.withTokenHeader(),
@@ -133,14 +140,37 @@ class EncompassConnect {
     return pipeLineData;
   }
 
-  async batchLoanUpdate(options: BatchLoanUpdateContract): Promise<string> {
-    const response: any = await this.fetchWithRetry('/encompass/v1/loanBatch/updateRequests', {
+  async batchLoanUpdate(
+    options: BatchLoanUpdateContract,
+  ): Promise<() => Promise<batchUpdateStatus>> {
+    const response: any = await this.fetchWithRetry('/loanBatch/updateRequests', {
       method: 'POST',
       body: JSON.stringify(options),
     }, { isNotJson: true });
-    return response && response.headers && response.headers.location
-      ? response.headers.location.split('/').reverse()[0]
+    const requestId: string = response && response.headers
+      ? response.headers.get('location').split('/').reverse()[0]
       : null;
+    return async (): Promise<batchUpdateStatus> => {
+      const url = `/loanBatch/updateRequests/${requestId}`;
+      const status: batchUpdateStatus = await this.fetchWithRetry(url);
+      return status;
+    };
+  }
+
+  schemas = {
+    generateContract: async (fields: any): Promise<any> => {
+      const contract = await this.fetchWithRetry(
+        '/schema/loan/contractGenerator',
+        { method: 'POST', body: JSON.stringify(fields) },
+      );
+      return contract;
+    },
+    getLoanSchema: async (entities?: string[]): Promise<any> => {
+      const entitiesString = entities ? entities.toString() : '';
+      const url = `/schema/loan${entitiesString ? `?entities=${entitiesString}` : ''}`;
+      const response = await this.fetchWithRetry(url);
+      return response;
+    },
   }
 
   loans = {
@@ -160,7 +190,7 @@ class EncompassConnect {
       return loanResult ? loanResult.loanGuid : null;
     },
     get: async (guid: string, entities: string[]): Promise<any> => {
-      const url = `/encompass/v1/loans/${guid}${entities ? `?entities=${entities.toString()}` : ''}`;
+      const url = `/loans/${guid}${entities ? `?entities=${entities.toString()}` : ''}`;
       const data: any = await this.fetchWithRetry(url);
       return data;
     },
@@ -172,17 +202,27 @@ class EncompassConnect {
       ];
       // @ts-ignore
       const queryOptions = new URLSearchParams(options || defaultOptions).toString();
-      const url = `/encompass/v1/loans/${guid}?${queryOptions}`;
+      const url = `/loans/${guid}?${queryOptions}`;
       const fetchOptions: RequestInit = {
         method: 'PATCH',
         body: JSON.stringify(loanData),
       };
-      const data = await this.fetchWithRetry(url, fetchOptions);
-      return data;
+      await this.fetchWithRetry(url, fetchOptions, { isNotJson: true });
+    },
+    updateWithGeneratedContract: async (
+      guid: string,
+      loanData: updateLoanWithGenerateContract,
+      options?: LoanUpdateOptions,
+    ): Promise<void> => {
+      const { customFields, standardFields } = loanData;
+      const massagedCustomFields = massageCustomFields(customFields);
+      const generatedContract: Promise<any> = await this.schemas.generateContract(standardFields);
+      const generatedLoanData = { ...generatedContract, customFields: massagedCustomFields };
+      await this.loans.update(guid, generatedLoanData, options);
     },
     delete: async (guid: string): Promise<void> => {
       await this.fetchWithRetry(
-        `/encompass/v1/loans/${guid}`,
+        `/loans/${guid}`,
         { method: 'DELETE' },
         { isNotJson: true },
       );
@@ -191,7 +231,7 @@ class EncompassConnect {
 
   milestones = {
     get: async (guid: string) => {
-      const milestones: any[] = await this.fetchWithRetry(`/encompass/v1/loans/${guid}/milestones`);
+      const milestones: any[] = await this.fetchWithRetry(`/loans/${guid}/milestones`);
       return milestones;
     },
     assign: async ({
@@ -213,7 +253,7 @@ class EncompassConnect {
           id: userId,
         }),
       };
-      await this.fetchWithRetry(`/encompass/v1/loans/${loanGuid}/associates/${id}`, fetchOptions, { isNotJson: true });
+      await this.fetchWithRetry(`/loans/${loanGuid}/associates/${id}`, fetchOptions, { isNotJson: true });
     },
     update: async ({
       loanGuid,
@@ -232,7 +272,7 @@ class EncompassConnect {
         method: 'PATCH',
         body: JSON.stringify(options),
       };
-      const uri = `/encompass/v1/loans/${loanGuid}/milestones/${id}${action ? `?action=${action}` : ''}`;
+      const uri = `/loans/${loanGuid}/milestones/${id}${action ? `?action=${action}` : ''}`;
       await this.fetchWithRetry(uri, fetchOptions, { isNotJson: true });
     },
   }

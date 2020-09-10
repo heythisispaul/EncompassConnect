@@ -3,3 +3,4 @@ src/
 *.map
 rollup.config.js
 tsconfig.json
+.eslintrc.js

@@ -138,3 +138,17 @@ export interface LoanUpdateOptions {
   view: 'entity' | 'id';
   loanTemplate?: string;
 }
+
+export interface batchUpdateStatus {
+  status: string;
+  lastModified: string;
+}
+
+export interface updateLoanWithGenerateContract {
+  standardFields?: {
+    [key: string]: any;
+  },
+  customFields?: {
+    [key: string]: any;
+  }
+}
