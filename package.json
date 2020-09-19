@@ -1,13 +1,15 @@
 {
   "name": "encompassconnect",
-  "version": "0.2.3",
+  "version": "0.2.12",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rimraf ./dist && tsc -d --outDir dist && rollup -c"
+    "test": "jest",
+    "posttest": "eslint",
+    "build": "rimraf ./dist && tsc -d --outDir dist && rollup -c",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,22 @@
     "Mortgage",
     "promise"
   ],
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/src/*.{ts,tsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  },
   "dependencies": {
     "@types/node-fetch": "^2.5.7",
     "node-fetch": "^2.6.1"

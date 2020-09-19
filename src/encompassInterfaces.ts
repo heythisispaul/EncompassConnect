@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 export interface sortOrderContract {
@@ -112,11 +113,13 @@ export interface EncompassConnectConstructor {
   instanceId: string;
   username?: string;
   password?: string;
+  version?: number;
 }
 
 export interface InternalRequestOptions {
   isRetry?: boolean;
   isNotJson?: boolean;
+  version?: number;
 }
 
 export interface AssignMilestone {
@@ -144,6 +147,11 @@ export interface batchUpdateStatus {
   lastModified: string;
 }
 
+export interface BatchUpdate {
+  getRequestId: () => string;
+  getUpdateStatus: () => Promise<batchUpdateStatus>;
+}
+
 export interface updateLoanWithGenerateContract {
   standardFields?: {
     [key: string]: any;
@@ -151,4 +159,23 @@ export interface updateLoanWithGenerateContract {
   customFields?: {
     [key: string]: any;
   }
+}
+
+export interface TokenIntrospection {
+  active: boolean;
+  scope: string;
+  client_id: string;
+  username: string;
+  token_type: 'Bearer';
+  exp: number;
+  sub: string;
+  encompass_instance_id: string;
+  user_name: string;
+  user_key: string;
+  encompass_user: string;
+  identity_type: 'Enterprise';
+  encompass_instance_type: string;
+  encompass_client_id: string;
+  realm_name: string;
+  bearer_token?: string;
 }

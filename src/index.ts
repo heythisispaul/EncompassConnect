@@ -14,6 +14,8 @@ import {
   LoanUpdateOptions,
   batchUpdateStatus,
   updateLoanWithGenerateContract,
+  BatchUpdate,
+  TokenIntrospection,
 } from './encompassInterfaces';
 import { massageCustomFields } from './utils';
 
@@ -34,12 +36,15 @@ class EncompassConnect {
 
   authBase: string;
 
+  version: number;
+
   constructor({
     clientId,
     APIsecret,
     instanceId,
     username,
     password,
+    version = 1,
   }: EncompassConnectConstructor) {
     this.#clientId = clientId;
     this.#APIsecret = APIsecret;
@@ -47,7 +52,8 @@ class EncompassConnect {
     this.#password = password || '';
     this.#token = '';
     this.username = username || '';
-    this.base = 'https://api.elliemae.com/encompass/v1';
+    this.version = version;
+    this.base = 'https://api.elliemae.com/encompass';
     this.authBase = 'https://api.elliemae.com';
   }
 
@@ -67,7 +73,7 @@ class EncompassConnect {
     options: RequestInit = {},
     customOptions: InternalRequestOptions = {},
   ): Promise<any> {
-    const { isRetry, isNotJson } = customOptions;
+    const { isRetry, isNotJson, version } = customOptions;
     const shouldRetry = !isRetry && this.username && this.#password;
     const failedAuthError = new Error(
       `Token invalid. ${!isRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`,
@@ -76,7 +82,7 @@ class EncompassConnect {
       if (!this.#token) {
         await this.getToken();
       }
-      const url = `${this.base}${path}`;
+      const url = `${this.base}/v${version || this.version}${path}`;
       const optionsWithToken: RequestInit = {
         ...options,
         headers: this.withTokenHeader(options.headers),
@@ -125,6 +131,32 @@ class EncompassConnect {
     this.setToken(access_token);
   }
 
+  async introspectToken(token?: string): Promise<TokenIntrospection | null> {
+    // @ts-ignore
+    const body: string = new URLSearchParams({
+      token: token || this.#token,
+    }).toString();
+    const Authorization: string = `Basic ${Buffer.from(`${this.#clientId}:${this.#APIsecret}`).toString('base64')}`;
+    const requestOptions: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization,
+      },
+      body,
+    };
+    try {
+      const response = await fetch(`${this.authBase}/oauth2/v1/token/introspection`, requestOptions);
+      if (response.ok) {
+        const tokenData: TokenIntrospection = await response.json();
+        return tokenData;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async getCanonicalNames(): Promise<any> {
     const canonicalNames = await this.fetchWithRetry('/loanPipeline/fieldDefinitions');
     return canonicalNames;
@@ -140,9 +172,7 @@ class EncompassConnect {
     return pipeLineData;
   }
 
-  async batchLoanUpdate(
-    options: BatchLoanUpdateContract,
-  ): Promise<() => Promise<batchUpdateStatus>> {
+  async batchLoanUpdate(options: BatchLoanUpdateContract): Promise<BatchUpdate> {
     const response: any = await this.fetchWithRetry('/loanBatch/updateRequests', {
       method: 'POST',
       body: JSON.stringify(options),
@@ -150,11 +180,19 @@ class EncompassConnect {
     const requestId: string = response && response.headers
       ? response.headers.get('location').split('/').reverse()[0]
       : null;
-    return async (): Promise<batchUpdateStatus> => {
-      const url = `/loanBatch/updateRequests/${requestId}`;
-      const status: batchUpdateStatus = await this.fetchWithRetry(url);
-      return status;
+    return {
+      getRequestId: () => requestId,
+      getUpdateStatus: async () => {
+        const url = `/loanBatch/updateRequests/${requestId}`;
+        const status: batchUpdateStatus = await this.fetchWithRetry(url);
+        return status;
+      },
     };
+  }
+
+  async request(url: string, options: RequestInit): Promise<Response> {
+    const response = await this.fetchWithRetry(url, options, { isNotJson: true });
+    return response;
   }
 
   schemas = {

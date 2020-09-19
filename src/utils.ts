@@ -8,7 +8,7 @@ export const massageCustomFields = (customFields: any) => {
       const parsedNumber = parseFloat(value);
       const customFieldObject: any = {
         fieldName,
-        stringValue: value.toString ? value.toString() : value,
+        stringValue: value && value.toString ? value.toString() : value,
       };
       if (!Number.isNaN(parsedNumber)) {
         customFieldObject.numericValue = parsedNumber;

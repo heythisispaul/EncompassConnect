@@ -4,3 +4,5 @@ src/
 rollup.config.js
 tsconfig.json
 .eslintrc.js
+coverage/
+__tests__/

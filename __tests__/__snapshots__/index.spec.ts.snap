@@ -1,0 +1,114 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EncompassConnect batchLoanUpdate makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loanBatch/updateRequests",
+  Object {
+    "body": "{\\"loanGuids\\":[\\"test-1\\",\\"test-2\\"],\\"loanData\\":{\\"key1\\":\\"value1\\",\\"key2\\":\\"value2\\"}}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
+exports[`EncompassConnect batchLoanUpdate returns a BatchUpdate object that can fetch its status 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loanBatch/updateRequests/9876",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`EncompassConnect getCanonicalNames fetches with the correct request options 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loanPipeline/fieldDefinitions",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`EncompassConnect getToken uses the provided username and password over the ones in the constructor to create a token 1`] = `
+Array [
+  "https://api.elliemae.com/oauth2/v1/token",
+  Object {
+    "body": "grant_type=password&username=PROVIDED_USERNAME%40encompass%3A%3CINSTANCE+ID%3E&password=PROVIDED_PASSWORD&client_id=%3CCLIENT+ID%3E&client_secret=%3CAPI+SECRET%3E",
+    "headers": Object {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    "method": "POST",
+    "redirect": "follow",
+  },
+]
+`;
+
+exports[`EncompassConnect getToken uses the username and password from the constructor to create a token if none are provided 1`] = `
+Array [
+  "https://api.elliemae.com/oauth2/v1/token",
+  Object {
+    "body": "grant_type=password&username=%3CCONSTRUCTOR+USERNAME%3E%40encompass%3A%3CINSTANCE+ID%3E&password=%3CCONSTRUCTOR+PASSWORD%3E&client_id=%3CCLIENT+ID%3E&client_secret=%3CAPI+SECRET%3E",
+    "headers": Object {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    "method": "POST",
+    "redirect": "follow",
+  },
+]
+`;
+
+exports[`EncompassConnect request fetches with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1test/url",
+  Object {
+    "body": "{\\"some\\":\\"value\\"}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
+exports[`EncompassConnect schemas generateContract makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/schema/loan/contractGenerator",
+  Object {
+    "body": "{\\"2\\":\\"10000\\",\\"317\\":\\"Todd Chavez\\"}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
+exports[`EncompassConnect schemas getLoanSchema makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/schema/loan",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`EncompassConnect viewPipeline makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loanPipeline",
+  Object {
+    "body": "{\\"filter\\":{\\"operator\\":\\"and\\",\\"terms\\":[]},\\"fields\\":[\\"test.field\\"]}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
