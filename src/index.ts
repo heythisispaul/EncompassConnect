@@ -13,7 +13,7 @@ import {
   UpdateMilestone,
   LoanUpdateOptions,
   batchUpdateStatus,
-  updateLoanWithGenerateContract,
+  UpdateLoanWithGenerateContract,
   BatchUpdate,
   TokenIntrospection,
 } from './encompassInterfaces';
@@ -227,7 +227,7 @@ class EncompassConnect {
       });
       return loanResult ? loanResult.loanGuid : null;
     },
-    get: async (guid: string, entities: string[]): Promise<any> => {
+    get: async (guid: string, entities?: string[]): Promise<any> => {
       const url = `/loans/${guid}${entities ? `?entities=${entities.toString()}` : ''}`;
       const data: any = await this.fetchWithRetry(url);
       return data;
@@ -249,7 +249,7 @@ class EncompassConnect {
     },
     updateWithGeneratedContract: async (
       guid: string,
-      loanData: updateLoanWithGenerateContract,
+      loanData: UpdateLoanWithGenerateContract,
       options?: LoanUpdateOptions,
     ): Promise<void> => {
       const { customFields, standardFields } = loanData;
@@ -296,7 +296,7 @@ class EncompassConnect {
     update: async ({
       loanGuid,
       milestone,
-      options = {},
+      options,
       action,
     }: UpdateMilestone): Promise<void> => {
       const milestoneData = await this.milestones.get(loanGuid);

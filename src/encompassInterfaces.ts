@@ -136,7 +136,7 @@ export interface UpdateMilestone {
 }
 
 export interface LoanUpdateOptions {
-  appendData: boolean;
+  appendData: boolean | string;
   persistent: 'transient' | 'permanent';
   view: 'entity' | 'id';
   loanTemplate?: string;
@@ -152,7 +152,7 @@ export interface BatchUpdate {
   getUpdateStatus: () => Promise<batchUpdateStatus>;
 }
 
-export interface updateLoanWithGenerateContract {
+export interface UpdateLoanWithGenerateContract {
   standardFields?: {
     [key: string]: any;
   },
