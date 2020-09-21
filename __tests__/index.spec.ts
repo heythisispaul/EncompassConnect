@@ -13,6 +13,7 @@ jest.mock('node-fetch');
 const fetch = mocked(fetchActual);
 
 describe('EncompassConnect', () => {
+  const responseJson = jest.fn();
   const createConstructor = (additions = {}) => ({
     clientId: '<CLIENT ID>',
     APIsecret: '<API SECRET>',
@@ -22,7 +23,10 @@ describe('EncompassConnect', () => {
   const mockResponse = (value: any = {}, status: number = 200, headers?: any) => {
     // @ts-ignore
     fetch.mockResolvedValueOnce({
-      json: () => Promise.resolve(value),
+      json: () => {
+        responseJson();
+        return Promise.resolve(value);
+      },
       status,
       ok: (status < 400),
       // @ts-ignore
@@ -35,6 +39,11 @@ describe('EncompassConnect', () => {
     fetch.mockImplementationOnce(() => {
       throw new Error(message);
     });
+  };
+  const mockResponseTimes = (times: number, ...args: any) => {
+    for (let i = 0; i < times; i += 1) {
+      mockResponse(...args);
+    }
   };
 
   const defaultCreds = {
@@ -72,6 +81,7 @@ describe('EncompassConnect', () => {
 
   beforeEach(() => {
     fetch.mockReset();
+    responseJson.mockReset();
   });
 
   describe('getToken', () => {
@@ -202,6 +212,77 @@ describe('EncompassConnect', () => {
       mockResponse();
       await testInstanceWithToken.request('test/url', { method: 'POST', body: JSON.stringify({ some: 'value' }) });
       expect(fetch.mock.calls[0]).toMatchSnapshot();
+    });
+  });
+
+  describe('fetchWithRetry', () => {
+    const createNewInstanceWithToken = (excludeCreds?: boolean, tokenValue: string = 'some token value'): EncompassConnect => {
+      const newInstanceWithToken = new EncompassConnect(
+        createConstructor(excludeCreds ? {} : defaultCreds),
+      );
+      newInstanceWithToken.setToken(tokenValue);
+      return newInstanceWithToken;
+    };
+
+    it('fetches a token if one is not already set in the instance', async () => {
+      expect.assertions(2);
+      mockResponseTimes(2);
+      const newInstance = new EncompassConnect(createConstructor(defaultCreds));
+      await newInstance.getCanonicalNames();
+      expect(fetch).toHaveBeenCalledTimes(2);
+      const firstRequestedUrl = fetch.mock.calls[0][0];
+      expect(firstRequestedUrl).toEqual(`${testInstanceWithCreds.authBase}/oauth2/v1/token`);
+    });
+
+    it('gets a fetches a token if the response was a 401 status and it has credentials', async () => {
+      mockResponse({}, 401);
+      mockResponseTimes(2);
+      const newInstanceWithBadToken = createNewInstanceWithToken();
+      await newInstanceWithBadToken.getCanonicalNames();
+      expect(fetch).toHaveBeenCalledTimes(3);
+      const firstRequestedUrl = fetch.mock.calls[1][0];
+      expect(firstRequestedUrl).toEqual(`${testInstanceWithCreds.authBase}/oauth2/v1/token`);
+    });
+
+    it('retries the same request if it successfully gets a new token', async () => {
+      mockResponse({}, 401);
+      mockResponseTimes(2);
+      const newInstanceWithBadToken = createNewInstanceWithToken();
+      await newInstanceWithBadToken.getCanonicalNames();
+      const [firstCall, retriedCall] = [0, 2].map((number) => fetch.mock.calls[number][0]);
+      expect(firstCall).toEqual(retriedCall);
+    });
+
+    it('throws an error if it receives a non-401 but invalid status code', async () => {
+      mockResponse({}, 500);
+      const instanceWithToken = createNewInstanceWithToken();
+      await expect(instanceWithToken.getCanonicalNames())
+        .rejects.toThrowError();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry if it receives a 401 but does not have a credentials', async () => {
+      mockResponseTimes(3, {}, 401);
+      const instanceWithToken = createNewInstanceWithToken(true);
+      await expect(instanceWithToken.getCanonicalNames())
+        .rejects.toThrowError();
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('deletes the invalid token if it receives a 401', async () => {
+      mockResponseTimes(3, {}, 401);
+      const instanceWithToken = createNewInstanceWithToken();
+      await expect(instanceWithToken.getCanonicalNames())
+        .rejects.toThrowError();
+      const firstCallAfterFailure = fetch.mock.calls[1][0];
+      expect(firstCallAfterFailure).toEqual(`${testInstanceWithCreds.authBase}/oauth2/v1/token`);
+    });
+
+    it('does not attempt to parse the body if provided in the config', async () => {
+      mockResponseTimes(3);
+      const instanceWithToken = createNewInstanceWithToken();
+      await instanceWithToken.request('someurl', {});
+      expect(responseJson).not.toHaveBeenCalled();
     });
   });
 
