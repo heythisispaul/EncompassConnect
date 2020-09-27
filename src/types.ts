@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
+
+/**
+ * @packageDocumentation
+ * @module Interfaces
+ */
 export interface SortOrderContract {
   canonicalName: string;
   order: 'asc' | 'desc';
