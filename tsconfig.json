@@ -1,3 +1,4 @@
 {
-  "extends": "@tsconfig/node12/tsconfig.json"
+  "extends": "@tsconfig/node12/tsconfig.json",
+  "exclude": ["__tests__"]
 }
