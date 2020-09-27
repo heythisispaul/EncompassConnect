@@ -1,15 +1,16 @@
 {
   "name": "encompassconnect",
-  "version": "0.2.12",
+  "version": "0.2.14",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "test": "jest",
     "posttest": "eslint",
     "build": "rimraf ./dist && tsc -d --outDir dist && rollup -c",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "docs": "typedoc --exclude \"**/*+(utils|index|.spec).ts"
   },
   "repository": {
     "type": "git",
@@ -28,7 +29,10 @@
     "testEnvironment": "node",
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "**/src/*.{ts,tsx}"
+      "**/src/*.{ts,tsx}",
+      "!**/src/index.ts",
+      "!**/dist/src/*",
+      "!**/docs/*"
     ],
     "coverageThreshold": {
       "global": {
@@ -59,6 +63,7 @@
     "rollup": "^2.26.10",
     "ts-jest": "^26.3.0",
     "tslib": "^2.0.1",
+    "typedoc": "^0.19.2",
     "typescript": "^4.0.2"
   }
 }

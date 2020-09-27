@@ -1,12 +1,12 @@
 import querysting from 'querystring';
 import fetchActual from 'node-fetch';
 import { mocked } from 'ts-jest/utils';
-import EncompassConnect from '../src';
+import EncompassConnect from '../src/encompassConnect';
 import {
   BatchLoanUpdateContract,
   LoanUpdateOptions,
   UpdateLoanWithGenerateContract,
-} from '../src/encompassInterfaces';
+} from '../src/types';
 
 jest.mock('node-fetch');
 

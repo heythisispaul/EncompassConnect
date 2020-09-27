@@ -3,4 +3,4 @@ dist/
 test.ts
 .vscode
 *.tgz
-coverage
+coverage/

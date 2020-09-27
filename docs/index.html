@@ -1,0 +1,372 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>encompassconnect</title>
+	<meta name="description" content="Documentation for encompassconnect">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">encompassconnect</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>encompassconnect</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#encompass-connect" id="encompass-connect" style="color: inherit; text-decoration: none;">
+					<h1>Encompass Connect</h1>
+				</a>
+				<p>An Unofficial, (mostly) typed Node SDK that wraps around Ellie Mae&#39;s Encompass <a href="https://developer.elliemae.com/">RESTful API.</a></p>
+				<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+					<h2>Getting Started</h2>
+				</a>
+				<p>Install via npm:
+				<code>npm install encompassconnect</code></p>
+				<p>Import the module into your project then create an instance with your Encompass information:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> EncompassConnect <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;encompassconnect&#x27;</span>;
+<span class="hljs-keyword">const</span> encompass = <span class="hljs-keyword">new</span> EncompassConnect({
+  clientId: <span class="hljs-string">&#x27;&lt;Client ID&gt;&#x27;</span>,
+  APIsecret: <span class="hljs-string">&#x27;&lt;API Secret&gt;&#x27;</span>,
+  instanceId: <span class="hljs-string">&#x27;&lt;Instance ID&gt;&#x27;</span>,
+  username: <span class="hljs-string">&#x27;mycoolusername&#x27;</span>
+  password: <span class="hljs-string">&#x27;mycoolpassword&#x27;</span>,
+});
+
+<span class="hljs-keyword">const</span> canonicalFields = <span class="hljs-keyword">await</span> encompass.getCanonicalNames();
+<span class="hljs-built_in">console</span>.log(canonicalFields);</code></pre>
+				<a href="#authenticating" id="authenticating" style="color: inherit; text-decoration: none;">
+					<h2>Authenticating</h2>
+				</a>
+				<p>There are three ways to authenticate an instance of <code>encompassconnect</code> with your Encompass instance, each may work better depending on your usecase.</p>
+				<a href="#providing-credentials-in-the-constructor" id="providing-credentials-in-the-constructor" style="color: inherit; text-decoration: none;">
+					<h3>Providing Credentials In The Constructor</h3>
+				</a>
+				<p>If you provide a username and password in the constructor (as done in the Getting Started section), these values are saved to the instance and will be used to fetch a token. This option is meant to be a &quot;set it and forget it&quot; option, useful for servers that need to be logged in with a service account or a similar scenario.</p>
+				<p>Before attempting to access a resource for the first time, these credentials will be used to fetch a token. This token will be reused until a <code>401</code> response is received from Encompass - at that time these credentials will be re-exchanged for a new token, and the failed request will be resent with the fresh token. If another <code>401</code> is returned at that time, an error will be thrown.</p>
+				<a href="#providing-credentials-to-a-get-token-request" id="providing-credentials-to-a-get-token-request" style="color: inherit; text-decoration: none;">
+					<h3>Providing Credentials to a Get Token Request</h3>
+				</a>
+				<p>If instead you want to exchange username and password for a single token, a token can be retrieved by calling the <code>getToken()</code> method to retrieve a token. Once this token expires it will be released, or can be overwritten at any time by calling <code>setToken()</code> to a different value.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> EncompassConnect, { EncompassConnectInitOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;encompassconnect&#x27;</span>;
+
+<span class="hljs-keyword">const</span> constructorValues: EncompassConnectInitOptions = {
+  clientId: <span class="hljs-string">&#x27;&lt;Client ID&gt;&#x27;</span>,
+  APIsecret: <span class="hljs-string">&#x27;&lt;API Secret&gt;&#x27;</span>,
+  instanceId: <span class="hljs-string">&#x27;&lt;Instance ID&gt;&#x27;</span>,
+}
+
+<span class="hljs-keyword">const</span> encompass = <span class="hljs-keyword">new</span> EncompassConnect(constructorValues);
+
+<span class="hljs-keyword">await</span> encompass.getToken(<span class="hljs-string">&#x27;mycoolusername&#x27;</span>, <span class="hljs-string">&#x27;mycoolpassword&#x27;</span>);
+
+<span class="hljs-keyword">const</span> canonicalFields = <span class="hljs-keyword">await</span> encompass.getCanonicalNames();
+<span class="hljs-built_in">console</span>.log(canonicalFields);</code></pre>
+				<p>When providing credentials here, they are not saved in the instance and will not be reused.</p>
+				<a href="#setting-the-token-value-directly" id="setting-the-token-value-directly" style="color: inherit; text-decoration: none;">
+					<h3>Setting The Token Value Directly</h3>
+				</a>
+				<p>Instead of providing credentials and locking the instance to the identity of one user, a token can be set in your application code. This may be useful if you expect to receive the token from a different source, or expect the user to provide the token themselves:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> EncompassConnect, { EncompassConnectInitOptions } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;encompassconnect&#x27;</span>;
+
+<span class="hljs-keyword">const</span> constructorValues: EncompassConnectInitOptions = {
+  clientId: <span class="hljs-string">&#x27;&lt;Client ID&gt;&#x27;</span>,
+  APIsecret: <span class="hljs-string">&#x27;&lt;API Secret&gt;&#x27;</span>,
+  instanceId: <span class="hljs-string">&#x27;&lt;Instance ID&gt;&#x27;</span>,
+}
+
+<span class="hljs-keyword">const</span> encompass = <span class="hljs-keyword">new</span> EncompassConnect(constructorValues);
+
+encompass.setToken(<span class="hljs-string">&#x27;&lt;A Valid Encompass Token&gt;&#x27;</span>);
+
+<span class="hljs-keyword">const</span> canonicalFields = <span class="hljs-keyword">await</span> encompass.getCanonicalNames();
+<span class="hljs-built_in">console</span>.log(canonicalFields);</code></pre>
+				<p>This token will be stored to the instance until either a new value is set with the <code>setToken()</code> method, or until a <code>401</code> is returned from the Encompass API. Be sure to set the token before making any resource requests.</p>
+				<a href="#examples" id="examples" style="color: inherit; text-decoration: none;">
+					<h2>Examples</h2>
+				</a>
+				<a href="#get-a-loan" id="get-a-loan" style="color: inherit; text-decoration: none;">
+					<h3>Get A loan</h3>
+				</a>
+				<p>A loan can be retrieved simply by providing its GUID to the <code>get()</code> method on the <code>loans</code> object. Optionally, an array of entities can be provided if you only need certain data. </p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> guid: <span class="hljs-built_in">string</span> = <span class="hljs-string">&#x27;some-loan-guid&#x27;</span>;
+
+<span class="hljs-keyword">const</span> fullLoan = <span class="hljs-keyword">await</span> encompass.loans.get(guid);
+<span class="hljs-built_in">console</span>.log(fullLoan);
+
+<span class="hljs-comment">// or just the closing costs entity:</span>
+<span class="hljs-keyword">const</span> closingCosts = <span class="hljs-keyword">await</span> encompass.loans.get(guid, [<span class="hljs-string">&#x27;closingCosts&#x27;</span>]);
+<span class="hljs-built_in">console</span>.log(closingCosts);</code></pre>
+				<p>Loan Guids can also be looked up by their loan number (<code>Loan.LoanNumber</code>) value by using the <code>getGuidByLoanNumber()</code>:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> guid: <span class="hljs-built_in">string</span> = <span class="hljs-keyword">await</span> encompass.loans.getGuidByLoanNumber(<span class="hljs-string">&#x27;123456&#x27;</span>);
+<span class="hljs-keyword">const</span> loanData = <span class="hljs-keyword">await</span> encompoass.loans.get(guid);
+<span class="hljs-built_in">console</span>.log(loanData);</code></pre>
+				<a href="#update-a-loan" id="update-a-loan" style="color: inherit; text-decoration: none;">
+					<h3>Update A Loan</h3>
+				</a>
+				<p>If the contract is already known for the data that needs to be updated, loan data can be updated using the <code>update()</code> method on the <code>loans</code> object:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> updateData: <span class="hljs-built_in">any</span> = {
+  applications: [
+    borrower: {
+      lastName: <span class="hljs-string">&#x27;new borrower last name&#x27;</span>,
+    },
+  ],
+  contacts: [
+    {
+      contactType: <span class="hljs-string">&#x27;LOAN_OFFICER&#x27;</span>,
+      name: <span class="hljs-string">&#x27;new loan officer name&#x27;</span>,
+    },
+  ],
+  customFields: [
+    {
+      fieldName: <span class="hljs-string">&#x27;CX.SOME.CUSTOM.FIELD&#x27;</span>,
+      stringValue: <span class="hljs-string">&#x27;new value&#x27;</span>,
+    },
+  ],
+};
+
+<span class="hljs-comment">// using the default options:</span>
+<span class="hljs-keyword">await</span> encompass.loans.update(<span class="hljs-string">&#x27;some-loan-guid&#x27;</span>, updateData);
+
+<span class="hljs-comment">// providing options:</span>
+<span class="hljs-keyword">const</span> options: LoanUpdateOptions = {
+  appendData: <span class="hljs-literal">true</span>,
+  persistent: <span class="hljs-string">&#x27;transient&#x27;</span>,
+  view: <span class="hljs-string">&#x27;entity&#x27;</span>,
+};
+
+<span class="hljs-keyword">await</span> encompass.loans.update(<span class="hljs-string">&#x27;some-loan-guid&#x27;</span>, updateData, options);</code></pre>
+				<p>If the contract is not known, one can be generated before updating. The update data is expected as key value pairs (the key being the field ID), and all standard Encompass values are placed in the <code>standardFields</code> key, while all custom fields are placed in the <code>customFields</code> key:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> updateData: UpdateLoanWithGenerateContract = {
+  standardFields: {
+    <span class="hljs-string">&#x27;4000&#x27;</span>: <span class="hljs-string">&#x27;new borrower last name&#x27;</span>,
+    <span class="hljs-string">&#x27;317&#x27;</span>: <span class="hljs-string">&#x27;new loan officer name&#x27;</span>,
+  },
+  customFields: {
+    <span class="hljs-string">&#x27;CX.SOME.CUSTOM.FIELD&#x27;</span>: <span class="hljs-string">&#x27;new value&#x27;</span>,
+  },
+};
+
+<span class="hljs-keyword">await</span> encompass.loans.updateWithGeneratedContract(<span class="hljs-string">&#x27;some-loan-guild&#x27;</span>, updateData);</code></pre>
+				<p>The <code>updateWithGeneratedContract()</code> method can also take the third <code>LoanUpdateOptions</code> as well. Keep in mind this method requires an extra call to generate the contract, and <code>loans.update()</code> should be used instead when possible.</p>
+				<a href="#viewing-a-pipeline" id="viewing-a-pipeline" style="color: inherit; text-decoration: none;">
+					<h3>Viewing a Pipeline</h3>
+				</a>
+				<p>Generate a pipeline view by calling the <code>viewPipeline()</code> method. This method has one required argument, a <code>PipeLineContract</code>, and can optionally take a limit value as the second argument:</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">// a pipelineContract expects either a loanGuids array, or a filter object:</span>
+<span class="hljs-keyword">const</span> commonFilterValues = {
+  sortOrder: [
+    {
+      canonicalName: <span class="hljs-string">&#x27;Loan.LastModified&#x27;</span>,
+      order: <span class="hljs-string">&#x27;desc&#x27;</span>
+    }
+  ],
+  fields: [
+    <span class="hljs-string">&quot;Loan.LoanAmount&quot;</span>,
+    <span class="hljs-string">&quot;Fields.4002&quot;</span>
+  ],
+};
+
+<span class="hljs-keyword">const</span> pipelineWithGuids: LoanGuidsPipeLineContract = {
+  ...commonFilterValues,
+  loanGuids: [
+    <span class="hljs-string">&#x27;some-loan-guid-1&#x27;</span>,
+    <span class="hljs-string">&#x27;some-loan-guid-2&#x27;</span>,
+  ],
+};
+
+<span class="hljs-keyword">const</span> pipelineWithFilter: FilterPipeLineContract = {
+  ...commonFilterValues,
+  filter: {
+    operator: <span class="hljs-string">&#x27;and&#x27;</span>,
+    terms: [
+      {
+        canonicalName: <span class="hljs-string">&quot;Loan.LastModified&quot;</span>,
+        matchType: <span class="hljs-string">&quot;greaterThanOrEquals&quot;</span>,
+        value: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>()
+      },
+      {
+        canonicalName: <span class="hljs-string">&quot;Loan.LoanFolder&quot;</span>,
+        matchType: <span class="hljs-string">&quot;exact&quot;</span>,
+        value: <span class="hljs-string">&quot;My Pipeline&quot;</span>
+      }
+    ]
+  },
+};
+
+<span class="hljs-keyword">const</span> pipelineDataFromGuids = <span class="hljs-keyword">await</span> encompass.viewPipeline(pipelineWithGuids);
+
+<span class="hljs-comment">// or with the other contract, and a limit of the first 50 results:</span>
+<span class="hljs-keyword">const</span> pipelineDataFromFilter = <span class="hljs-keyword">await</span> encompass.viewPipeline(pipelineWithFilter, <span class="hljs-number">50</span>);</code></pre>
+				<a href="#batch-update" id="batch-update" style="color: inherit; text-decoration: none;">
+					<h3>Batch Update</h3>
+				</a>
+				<p>The batch update API allows your to apply the same loan data to multiple loans and can be invoked with <code>batchLoanUpdate()</code> method. This method returns an object that with it&#39;s own functionality to check the status of batch update, or to get the request ID if needed.</p>
+				<p> Just like viewing a pipeline, either a filter or an array of lan GUIDs can be provided.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> updateData: BatchLoanUpdateContract = {
+  loanGuids: [
+    <span class="hljs-comment">// array of loan GUIDs to update</span>
+  ],
+  loanData: {
+    <span class="hljs-comment">// contract of the loan data to apply to each loan</span>
+  },
+};
+
+<span class="hljs-keyword">const</span> exampleBatchUpdate: BatchUpdate = <span class="hljs-keyword">await</span> encompass.batchLoanUpdate(updateData);
+
+<span class="hljs-comment">// the return value can be used to check the status:</span>
+<span class="hljs-keyword">const</span> latestStatus: BatchUpdateStatus = <span class="hljs-keyword">await</span> exampleBatchUpdate.getUpdateStatus();
+<span class="hljs-built_in">console</span>.log(latestStatus.status) <span class="hljs-comment">// &#x27;done&#x27; or &#x27;error&#x27;</span>
+
+<span class="hljs-comment">// or if needed you can get the request ID itself:</span>
+<span class="hljs-keyword">const</span> exampleBatchUpdateId: <span class="hljs-built_in">string</span> = exampleBatchUpdate.getRequestId();</code></pre>
+				<a href="#update-a-milestone" id="update-a-milestone" style="color: inherit; text-decoration: none;">
+					<h3>Update a Milestone</h3>
+				</a>
+				<p>Milestones can be read or updated through the methods in the <code>milestones</code> object. For example, in the below scenario, a loan has completed Processing, and is ready to be submitted to an underwriter. We&#39;ll assign an underwriting contact to the &#39;Underwriting&#39; milestone, and then complete the &#39;Processing&#39; milestone.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> guidToUpdate: <span class="hljs-built_in">string</span> = <span class="hljs-string">&#x27;some-loan-guid&#x27;</span>;
+<span class="hljs-keyword">const</span> assignUnderwriterOptions: AssignMilestoneOptions = {
+  loanGuid: guidToUpdate,
+  milestone: <span class="hljs-string">&#x27;Underwriting&#x27;</span>,
+  userId: <span class="hljs-string">&#x27;UnderwritersId&#x27;</span>,
+};
+
+<span class="hljs-keyword">await</span> encompass.milestones.assign(assignUnderwriterOptions);
+
+<span class="hljs-comment">// after this operation is complete, we can complete our Processing milestone:</span>
+<span class="hljs-keyword">const</span> updateProcessingOptions: UpdateMilestoneOptions = {
+  loanGuid: guidToUpdate,
+  milestone: <span class="hljs-string">&#x27;Processing&#x27;</span>,
+  options: {
+    comments: <span class="hljs-string">&#x27;this milestone is complete!&#x27;</span>,
+  }
+  action: <span class="hljs-string">&#x27;finish&#x27;</span>,
+};
+
+<span class="hljs-keyword">await</span> encompass.milestones.update(updateProcessingOptions);</code></pre>
+				<a href="#the-request-method" id="the-request-method" style="color: inherit; text-decoration: none;">
+					<h3>The Request Method</h3>
+				</a>
+				<p>If an API is not available through an explicit method in this class, the <code>request()</code> method will act as a fetch wrapper around any Encompass API call you want to make and return the response. It takes in the same arguments as any <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">fetch</a> API, with the exception that the first argument is appended as a path to the Encompass API domain.</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">// hitting the Get Custom Fields API:</span>
+<span class="hljs-keyword">const</span> customFieldsResponse: Response = <span class="hljs-keyword">await</span> encompass.request(<span class="hljs-string">&#x27;/settings/loan/customFields&#x27;</span>);
+<span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> customFieldsResponse.json();
+<span class="hljs-built_in">console</span>.log(data);
+
+<span class="hljs-comment">// or update a contact:</span>
+<span class="hljs-keyword">const</span> options: RequestInit = {
+  method: <span class="hljs-string">&#x27;POST&#x27;</span>,
+  body: {
+    firstname: <span class="hljs-string">&#x27;contact first name&#x27;</span>,
+    lastname: <span class="hljs-string">&#x27;contact last name&#x27;</span>,
+  },
+};
+
+<span class="hljs-keyword">await</span> encompass.request(<span class="hljs-string">&#x27;/businessContacts/&lt;some-contact-id&gt;&#x27;</span>, options);</code></pre>
+				<a href="#full-api" id="full-api" style="color: inherit; text-decoration: none;">
+					<h2>Full API</h2>
+				</a>
+				<a href="#new-encompassconnectencompassconnectinitoptions" id="new-encompassconnectencompassconnectinitoptions" style="color: inherit; text-decoration: none;">
+					<h3>new EncompassConnect(<strong>EncompassConnectInitOptions</strong>)</h3>
+				</a>
+				<p>Creates a new instance of <code>encompassconnect</code>.</p>
+				<a href="#gettoken__username-string-password-string__-promiseltvoidgt" id="gettoken__username-string-password-string__-promiseltvoidgt" style="color: inherit; text-decoration: none;">
+					<h3><code>GetToken(__username?: string, password?: string__): Promise&lt;void&gt;</code></h3>
+				</a>
+				<p>Exchange a username and password for a bearer token to use the Encompass API. If no credentials are provided, will fallback to the credentials provided to the constructor.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_encompassconnect_.html">&quot;encompass<wbr>Connect&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_types_.html">&quot;types&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

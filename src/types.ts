@@ -1,14 +1,14 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-export interface sortOrderContract {
+export interface SortOrderContract {
   canonicalName: string;
   order: 'asc' | 'desc';
 }
 
 export interface PipeLineRequest {
   fields?: string[];
-  sortOrder?: sortOrderContract[];
+  sortOrder?: SortOrderContract[];
 }
 
 export interface LoanGuidsPipeLineContract extends PipeLineRequest {
@@ -107,7 +107,7 @@ export interface CreateLoanContract {
   loan?: any;
 }
 
-export interface EncompassConnectConstructor {
+export interface EncompassConnectInitOptions {
   clientId: string;
   APIsecret: string;
   instanceId: string;
@@ -122,13 +122,13 @@ export interface InternalRequestOptions {
   version?: number;
 }
 
-export interface AssignMilestone {
+export interface AssignMilestoneOptions {
   loanGuid: string;
   milestone: string;
   userId: string;
 }
 
-export interface UpdateMilestone {
+export interface UpdateMilestoneOptions {
   loanGuid: string;
   milestone: string;
   options: any;
