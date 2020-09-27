@@ -1,6 +1,6 @@
 {
   "name": "encompassconnect",
-  "version": "0.2.14",
+  "version": "1.0.0-0",
   "description": "An Unofficial, (mostly) typed Node SDK that wraps around Ellie Mae's Encompass RESTful API.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
