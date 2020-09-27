@@ -1,5 +1,10 @@
 /* eslint-disable max-len */
 /* eslint-disable camelcase */
+
+/**
+ * @packageDocumentation
+ * @module EncompassConnectClass
+ */
 import fetch, {
   Response,
   RequestInit,
