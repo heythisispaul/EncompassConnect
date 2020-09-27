@@ -20,6 +20,8 @@ const canonicalFields = await encompass.getCanonicalNames();
 console.log(canonicalFields);
 ```
 
+Checkout the [documentation site](https://heythisispaul.github.io/EncompassConnect/classes/encompassconnectclass.encompassconnect.html) for all available methods and functionality.
+
 ## Authenticating 
 There are three ways to authenticate an instance of `encompassconnect` with your Encompass instance, each may work better depending on your usecase.
 

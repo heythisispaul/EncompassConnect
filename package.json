@@ -1,7 +1,7 @@
 {
   "name": "encompassconnect",
   "version": "0.2.14",
-  "description": "",
+  "description": "An Unofficial, (mostly) typed Node SDK that wraps around Ellie Mae's Encompass RESTful API.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "dist/src/index.d.ts",
@@ -12,6 +12,7 @@
     "prepack": "npm run build",
     "docs": "typedoc --exclude \"**/*+(utils|index|.spec).ts"
   },
+  "homepage": "https://heythisispaul.github.io/EncompassConnect/index.html",
   "repository": {
     "type": "git",
     "url": "https://github.com/heythisispaul/EncompassConnect"
