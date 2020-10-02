@@ -30,10 +30,14 @@
     "testEnvironment": "node",
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "**/src/*.{ts,tsx}",
+      "**/src/**/*.{ts,tsx}",
       "!**/src/index.ts",
       "!**/dist/src/*",
       "!**/docs/*"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/__utils__/*"
     ],
     "coverageThreshold": {
       "global": {

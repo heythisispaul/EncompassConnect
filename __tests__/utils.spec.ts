@@ -1,4 +1,4 @@
-import { massageCustomFields } from '../src/utils';
+import { massageCustomFields, objectToURLString } from '../src/utils';
 
 describe('utils', () => {
   describe('massageCustomFields', () => {
@@ -28,6 +28,28 @@ describe('utils', () => {
     it('includes a numeric value if it can parse a number from the input value', () => {
       const [,, age] = massageCustomFields(customFields);
       expect(age.numericValue).toEqual(50);
+    });
+  });
+
+  describe('objectToURLString', () => {
+    const input = {
+      who: 'I',
+      when: 1990,
+      doing: 'very famous TV show',
+    };
+    const expectedOutput = 'who=I&when=1990&doing=very+famous+TV+show';
+    it('turns the provided object into a URL encoded data string', () => {
+      const result = objectToURLString(input);
+      expect(result).toEqual(expectedOutput);
+    });
+
+    it('returns an empty string if no input is provided', () => {
+      expect(objectToURLString(null)).toEqual('');
+    });
+
+    it('prepends a "?" if the queryString parameter is provided', () => {
+      const result = objectToURLString(input, true);
+      expect(result).toEqual(`?${expectedOutput}`);
     });
   });
 });

@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`milestones assign calls the update milestone associate API with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/associates/<MATCHING MILESTONE ID>",
+  Object {
+    "body": "{\\"loanAssociateType\\":\\"User\\",\\"id\\":\\"<PROVIDED USER ID>\\"}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "PUT",
+  },
+]
+`;
+
+exports[`milestones get makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/milestones",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`milestones update calls the update milestone associate API with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/milestones/<MATCHING MILESTONE ID>",
+  Object {
+    "body": "{\\"provided\\":\\"options\\"}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "PATCH",
+  },
+]
+`;

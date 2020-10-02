@@ -147,14 +147,14 @@ export interface LoanUpdateOptions {
   loanTemplate?: string;
 }
 
-export interface batchUpdateStatus {
+export interface BatchUpdateStatus {
   status: string;
   lastModified: string;
 }
 
 export interface BatchUpdate {
   getRequestId: () => string;
-  getUpdateStatus: () => Promise<batchUpdateStatus>;
+  getUpdateStatus: () => Promise<BatchUpdateStatus>;
 }
 
 export interface UpdateLoanWithGenerateContract {
@@ -183,4 +183,15 @@ export interface TokenIntrospection {
   encompass_client_id: string;
   realm_name: string;
   bearer_token?: string;
+}
+
+export interface ListOfUsersOptions {
+  viewEmailSignature?: boolean;
+  groupId?: string | number;
+  roleId?: string;
+  personaId?: string | number;
+  organizationId?: string | number;
+  userName?: string;
+  start?: number;
+  limit?: number;
 }

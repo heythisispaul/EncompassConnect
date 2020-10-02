@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserService getList appends the filter object as a query string 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/company/users?",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`UserService getList appends the filter object as a query string 2`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/company/users?groupId=1&limit=50&userName=Mr.+Peanutbutter",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`UserService getProfile makes the API call with "me" in the url if no argument is provided 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/company/users/<TEST_LOS_ID>",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`UserService getProfile makes the API call with "me" in the url if no argument is provided 2`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/company/users/me",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;

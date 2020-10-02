@@ -12,7 +12,7 @@ const encompass = new EncompassConnect({
   clientId: '<Client ID>',
   APIsecret: '<API Secret>',
   instanceId: '<Instance ID>',
-  username: 'mycoolusername'
+  username: 'mycoolusername',
   password: 'mycoolpassword',
 });
 
@@ -199,7 +199,7 @@ const pipelineDataFromFilter = await encompass.viewPipeline(pipelineWithFilter, 
 ### Batch Update
 The batch update API allows your to apply the same loan data to multiple loans and can be invoked with `batchLoanUpdate()` method. This method returns an object that with it's own functionality to check the status of batch update, or to get the request ID if needed.
 
- Just like viewing a pipeline, either a filter or an array of lan GUIDs can be provided.
+ Just like viewing a pipeline, either a filter or an array of loan GUIDs can be provided.
 ```typescript
 const updateData: BatchLoanUpdateContract = {
   loanGuids: [
@@ -264,6 +264,8 @@ const options: RequestInit = {
 
 await encompass.request('/businessContacts/<some-contact-id>', options);
 ```
+
+Checkout the [documentation site](https://heythisispaul.github.io/EncompassConnect/classes/encompassconnectclass.encompassconnect.html) for all available methods and other examples.
 
 ## Contributing
 This is a growing library as needs arise. Any contributions are welcome.

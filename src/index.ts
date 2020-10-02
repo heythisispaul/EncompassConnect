@@ -2,16 +2,17 @@ import EncompassConnect from './encompassConnect';
 
 export type { Response, RequestInit } from 'node-fetch';
 export type {
+  AssignMilestoneOptions,
+  BatchLoanUpdateContract,
   EncompassConnectInitOptions,
   PipeLineContract,
-  BatchLoanUpdateContract,
-  AssignMilestoneOptions,
   UpdateMilestoneOptions,
   LoanUpdateOptions,
-  batchUpdateStatus,
+  BatchUpdateStatus,
   UpdateLoanWithGenerateContract,
   BatchUpdate,
   TokenIntrospection,
+  ListOfUsersOptions,
 } from './types';
 
 export default EncompassConnect;

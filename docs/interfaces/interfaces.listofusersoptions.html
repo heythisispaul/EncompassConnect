@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>EncompassConnectInitOptions | encompassconnect</title>
+	<title>ListOfUsersOptions | encompassconnect</title>
 	<meta name="description" content="Documentation for encompassconnect">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/interfaces.html">Interfaces</a>
 				</li>
 				<li>
-					<a href="interfaces.encompassconnectinitoptions.html">EncompassConnectInitOptions</a>
+					<a href="interfaces.listofusersoptions.html">ListOfUsersOptions</a>
 				</li>
 			</ul>
-			<h1>Interface EncompassConnectInitOptions</h1>
+			<h1>Interface ListOfUsersOptions</h1>
 		</div>
 	</div>
 </header>
@@ -73,7 +73,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">EncompassConnectInitOptions</span>
+						<span class="target">ListOfUsersOptions</span>
 					</li>
 				</ul>
 			</section>
@@ -84,12 +84,14 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#apisecret" class="tsd-kind-icon">APIsecret</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#clientid" class="tsd-kind-icon">client<wbr>Id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#instanceid" class="tsd-kind-icon">instance<wbr>Id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#password" class="tsd-kind-icon">password</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#username" class="tsd-kind-icon">username</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.encompassconnectinitoptions.html#version" class="tsd-kind-icon">version</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#groupid" class="tsd-kind-icon">group<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#limit" class="tsd-kind-icon">limit</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#organizationid" class="tsd-kind-icon">organization<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#personaid" class="tsd-kind-icon">persona<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#roleid" class="tsd-kind-icon">role<wbr>Id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#start" class="tsd-kind-icon">start</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#username" class="tsd-kind-icon">user<wbr>Name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="interfaces.listofusersoptions.html#viewemailsignature" class="tsd-kind-icon">view<wbr>Email<wbr>Signature</a></li>
 							</ul>
 						</section>
 					</div>
@@ -98,62 +100,82 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="apisecret" class="tsd-anchor"></a>
-					<h3>APIsecret</h3>
-					<div class="tsd-signature tsd-kind-icon">APIsecret<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="groupid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> group<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">group<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L117">types.ts:117</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L190">types.ts:190</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="clientid" class="tsd-anchor"></a>
-					<h3>client<wbr>Id</h3>
-					<div class="tsd-signature tsd-kind-icon">client<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="limit" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> limit</h3>
+					<div class="tsd-signature tsd-kind-icon">limit<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L116">types.ts:116</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L196">types.ts:196</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="instanceid" class="tsd-anchor"></a>
-					<h3>instance<wbr>Id</h3>
-					<div class="tsd-signature tsd-kind-icon">instance<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="organizationid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> organization<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">organization<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L118">types.ts:118</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L193">types.ts:193</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="password" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> password</h3>
-					<div class="tsd-signature tsd-kind-icon">password<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<a name="personaid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> persona<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">persona<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L120">types.ts:120</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L192">types.ts:192</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="roleid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> role<wbr>Id</h3>
+					<div class="tsd-signature tsd-kind-icon">role<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L191">types.ts:191</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="start" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> start</h3>
+					<div class="tsd-signature tsd-kind-icon">start<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L195">types.ts:195</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="username" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> username</h3>
-					<div class="tsd-signature tsd-kind-icon">username<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> user<wbr>Name</h3>
+					<div class="tsd-signature tsd-kind-icon">user<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L119">types.ts:119</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L194">types.ts:194</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="version" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> version</h3>
-					<div class="tsd-signature tsd-kind-icon">version<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
+					<a name="viewemailsignature" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> view<wbr>Email<wbr>Signature</h3>
+					<div class="tsd-signature tsd-kind-icon">view<wbr>Email<wbr>Signature<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L121">types.ts:121</a></li>
+							<li>Defined in <a href="https://github.com/heythisispaul/EncompassConnect/blob/0564e3f/src/types.ts#L189">types.ts:189</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -193,33 +215,9 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.createloancontract.html" class="tsd-kind-icon">Create<wbr>Loan<wbr>Contract</a>
 					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-module">
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.encompassconnectinitoptions.html" class="tsd-kind-icon">Encompass<wbr>Connect<wbr>Init<wbr>Options</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#apisecret" class="tsd-kind-icon">APIsecret</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#clientid" class="tsd-kind-icon">client<wbr>Id</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#instanceid" class="tsd-kind-icon">instance<wbr>Id</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#password" class="tsd-kind-icon">password</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#username" class="tsd-kind-icon">username</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="interfaces.encompassconnectinitoptions.html#version" class="tsd-kind-icon">version</a>
-							</li>
-						</ul>
 					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.filterpipelinecontract.html" class="tsd-kind-icon">Filter<wbr>Pipe<wbr>Line<wbr>Contract</a>
 					</li>
@@ -229,9 +227,39 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.licenseinformation.html" class="tsd-kind-icon">License<wbr>Information</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.listofusersoptions.html" class="tsd-kind-icon">List<wbr>OfUsers<wbr>Options</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#groupid" class="tsd-kind-icon">group<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#limit" class="tsd-kind-icon">limit</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#organizationid" class="tsd-kind-icon">organization<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#personaid" class="tsd-kind-icon">persona<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#roleid" class="tsd-kind-icon">role<wbr>Id</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#start" class="tsd-kind-icon">start</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#username" class="tsd-kind-icon">user<wbr>Name</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="interfaces.listofusersoptions.html#viewemailsignature" class="tsd-kind-icon">view<wbr>Email<wbr>Signature</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="interfaces.loanassociateproperties.html" class="tsd-kind-icon">Loan<wbr>Associate<wbr>Properties</a>
 					</li>

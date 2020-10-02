@@ -63,92 +63,6 @@ Array [
 ]
 `;
 
-exports[`EncompassConnect loans delete makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>",
-  Object {
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "DELETE",
-  },
-]
-`;
-
-exports[`EncompassConnect loans get makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>",
-  Object {
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-  },
-]
-`;
-
-exports[`EncompassConnect loans update makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>?appendData=false&persistent=transient&view=entity",
-  Object {
-    "body": "{\\"applications\\":[{\\"id\\":\\"borrower_1\\",\\"borrower\\":{\\"firstName\\":\\"Todd\\",\\"lastName\\":\\"Chavez\\"}}]}",
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "PATCH",
-  },
-]
-`;
-
-exports[`EncompassConnect loans updateWithGeneratedContract makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>?appendData=false&persistent=transient&view=entity",
-  Object {
-    "body": "{\\"testContract\\":\\"<GENERATE CONTRACT RESPONSE>\\",\\"customFields\\":[{\\"fieldName\\":\\"CX.TEST.FIELD\\",\\"stringValue\\":\\"test value\\"}]}",
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "PATCH",
-  },
-]
-`;
-
-exports[`EncompassConnect milestones assign calls the update milestone associate API with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/associates/<MATCHING MILESTONE ID>",
-  Object {
-    "body": "{\\"loanAssociateType\\":\\"User\\",\\"id\\":\\"<PROVIDED USER ID>\\"}",
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "PUT",
-  },
-]
-`;
-
-exports[`EncompassConnect milestones get makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/milestones",
-  Object {
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-  },
-]
-`;
-
-exports[`EncompassConnect milestones update calls the update milestone associate API with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/milestones/<MATCHING MILESTONE ID>",
-  Object {
-    "body": "{\\"provided\\":\\"options\\"}",
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "PATCH",
-  },
-]
-`;
-
 exports[`EncompassConnect request fetches with the correct information 1`] = `
 Array [
   "https://api.elliemae.com/encompass/v1test/url",
@@ -158,30 +72,6 @@ Array [
       "Authorization": "Bearer <MOCK TOKEN VALUE>",
     },
     "method": "POST",
-  },
-]
-`;
-
-exports[`EncompassConnect schemas generateContract makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/schema/loan/contractGenerator",
-  Object {
-    "body": "{\\"2\\":\\"10000\\",\\"317\\":\\"Todd Chavez\\"}",
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
-    "method": "POST",
-  },
-]
-`;
-
-exports[`EncompassConnect schemas getLoanSchema makes the API call with the correct information 1`] = `
-Array [
-  "https://api.elliemae.com/encompass/v1/schema/loan",
-  Object {
-    "headers": Object {
-      "Authorization": "Bearer <MOCK TOKEN VALUE>",
-    },
   },
 ]
 `;

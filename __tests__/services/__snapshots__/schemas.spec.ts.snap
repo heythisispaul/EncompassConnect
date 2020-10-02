@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`schemas generateContract makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/schema/loan/contractGenerator",
+  Object {
+    "body": "{\\"2\\":\\"10000\\",\\"317\\":\\"Todd Chavez\\"}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
+exports[`schemas getLoanSchema makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/schema/loan",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;

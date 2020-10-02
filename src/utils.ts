@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 export const massageCustomFields = (customFields: any) => {
   if (!customFields) {
     return [];
@@ -16,4 +15,10 @@ export const massageCustomFields = (customFields: any) => {
       return customFieldObject;
     });
   return massaged;
+};
+
+export const objectToURLString = (input: any, queryString?: boolean): string => {
+  // @ts-ignore
+  const result = input ? new URLSearchParams(input).toString() : '';
+  return queryString ? `?${result}` : result;
 };

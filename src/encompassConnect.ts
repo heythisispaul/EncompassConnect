@@ -15,15 +15,17 @@ import {
   InternalRequestOptions,
   PipeLineContract,
   BatchLoanUpdateContract,
-  AssignMilestoneOptions,
-  UpdateMilestoneOptions,
-  LoanUpdateOptions,
-  batchUpdateStatus,
-  UpdateLoanWithGenerateContract,
+  BatchUpdateStatus,
   BatchUpdate,
   TokenIntrospection,
 } from './types';
-import { massageCustomFields } from './utils';
+import {
+  LoanService,
+  MilestoneService,
+  SchemaService,
+  UserService,
+} from './services';
+import { objectToURLString } from './utils';
 
 class EncompassConnect {
   /**
@@ -62,6 +64,14 @@ class EncompassConnect {
    */
   base: string;
 
+  loans: LoanService;
+
+  milestones: MilestoneService;
+
+  schemas: SchemaService;
+
+  users: UserService;
+
   /**
    * @ignore
    */
@@ -89,6 +99,10 @@ class EncompassConnect {
     this.version = version;
     this.base = 'https://api.elliemae.com/encompass';
     this.authBase = 'https://api.elliemae.com';
+    this.loans = new LoanService(this);
+    this.milestones = new MilestoneService(this);
+    this.schemas = new SchemaService(this);
+    this.users = new UserService(this);
   }
 
   /**
@@ -111,7 +125,7 @@ class EncompassConnect {
   /**
    * @ignore
    */
-  private async fetchWithRetry(
+  async fetchWithRetry(
     path: string,
     options: RequestInit = {},
     customOptions: InternalRequestOptions = {},
@@ -119,7 +133,7 @@ class EncompassConnect {
     const { isRetry, isNotJson, version } = customOptions;
     const shouldRetry = !isRetry && this.username && this.#password;
     const failedAuthError = new Error(
-      `Token invalid. ${!isRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`,
+      `Token invalid. ${!isRetry && shouldRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`,
     );
     try {
       if (!this.#token) {
@@ -155,14 +169,13 @@ class EncompassConnect {
    * If no username and password are provided, it will fallback to the username and password values provided to the constructor.
    */
   async getToken(username?: string, password?: string): Promise<void> {
-    // @ts-ignore
-    const body: string = new URLSearchParams({
+    const body: string = objectToURLString({
       grant_type: 'password',
       username: `${username || this.username}@encompass:${this.#instanceId}`,
       password: password || this.#password,
       client_id: this.#clientId,
       client_secret: this.#APIsecret,
-    }).toString();
+    });
 
     const requestOptions: RequestInit = {
       method: 'POST',
@@ -183,10 +196,9 @@ class EncompassConnect {
    * If the introspection returns a valid token, it will return the response body of the request, if the token is invalid, returns `null`.
    */
   async introspectToken(token?: string): Promise<TokenIntrospection | null> {
-    // @ts-ignore
-    const body: string = new URLSearchParams({
+    const body: string = objectToURLString({
       token: token || this.#token,
-    }).toString();
+    });
     const Authorization: string = `Basic ${Buffer.from(`${this.#clientId}:${this.#APIsecret}`).toString('base64')}`;
     const requestOptions: RequestInit = {
       method: 'POST',
@@ -315,7 +327,7 @@ class EncompassConnect {
       getRequestId: () => requestId,
       getUpdateStatus: async () => {
         const url = `/loanBatch/updateRequests/${requestId}`;
-        const status: batchUpdateStatus = await this.fetchWithRetry(url);
+        const status: BatchUpdateStatus = await this.fetchWithRetry(url);
         return status;
       },
     };
@@ -345,252 +357,6 @@ class EncompassConnect {
   async request(url: string, options: RequestInit): Promise<Response> {
     const response = await this.fetchWithRetry(url, options, { isNotJson: true });
     return response;
-  }
-
-  /**
-   * A collection of methods that assist with schema operations.
-   */
-  schemas = {
-    /**
-     * Takes in a value representing key value pairs of field IDs and new values and returns the correct contract shape to perform an update on a loan.
-     *
-     * ```typescript
-     *  const borrowerUpdateData = {
-     *   '4000': 'new first name',
-     *   '4002': 'new last name',
-     *  };
-     *
-     *  // returns the contract:
-     *  const updateContract = await encompass.schemas.generateContract(borrowerUpdateData);
-     *  // this value can now be used to update a loan:
-     *  await encompass.loans.update(updateContract);
-     *  ```
-     */
-    generateContract: async (fields: any): Promise<any> => {
-      const contract = await this.fetchWithRetry(
-        '/schema/loan/contractGenerator',
-        { method: 'POST', body: JSON.stringify(fields) },
-      );
-      return contract;
-    },
-    /**
-     * Calls the loan schema endpoint and returns the schema. Can be filtered down by providing an optional array of entity names.
-     */
-    getLoanSchema: async (entities?: string[]): Promise<any> => {
-      const entitiesString = entities ? entities.toString() : '';
-      const url = `/schema/loan${entitiesString ? `?entities=${entitiesString}` : ''}`;
-      const response = await this.fetchWithRetry(url);
-      return response;
-    },
-  }
-
-  /**
-   * A collection of methods to use when working with loans. In general, these are wrappers around the 'Loan Management' API endpoints.
-   */
-  loans = {
-    /**
-     * Takes in a loan number (`Loan.LoanNumber`) and returns the matching loan's GUID. If no matching loan is found, returns `null`.
-     */
-    getGuidByLoanNumber: async (loanNumber: string): Promise<string> => {
-      const [loanResult] = await this.viewPipeline({
-        filter: {
-          operator: 'and',
-          terms: [
-            {
-              canonicalName: 'Loan.LoanNumber',
-              matchType: 'exact',
-              value: loanNumber,
-            },
-          ],
-        },
-      });
-      return loanResult ? loanResult.loanGuid : null;
-    },
-    /**
-     * Retrieves the loan data of the provided loan GUID. Can optionally be filtered by providing an array of entities.
-     */
-    get: async (guid: string, entities?: string[]): Promise<any> => {
-      const url = `/loans/${guid}${entities ? `?entities=${entities.toString()}` : ''}`;
-      const data: any = await this.fetchWithRetry(url);
-      return data;
-    },
-    /**
-      * Updates a loan object. Expects the data to already be formatted into the correct contract shape.
-      *
-      *  ```typescript
-      *  const updateData: any = {
-      *    applications: [
-      *      borrower: {
-      *        lastName: 'new borrower last name',
-      *      },
-      *    ],
-      *    contacts: [
-      *      {
-      *        contactType: 'LOAN_OFFICER',
-      *        name: 'new loan officer name',
-      *      },
-      *    ],
-      *    customFields: [
-      *      {
-      *        fieldName: 'CX.SOME.CUSTOM.FIELD',
-      *        stringValue: 'new value',
-      *      },
-      *    ],
-      *  };
-      *
-      *  // using the default options:
-      *  await encompass.loans.update('some-loan-guid', updateData);
-      *
-      *  // providing options:
-      *  const options: LoanUpdateOptions = {
-      *    appendData: true,
-      *    persistent: 'transient',
-      *    view: 'entity',
-      *  };
-      *
-      *  await encompass.loans.update('some-loan-guid', updateData, options);
-      *  ```
-      */
-    update: async (guid: string, loanData: any, options?: LoanUpdateOptions): Promise<void> => {
-      const defaultOptions = [
-        ['appendData', 'false'],
-        ['persistent', 'transient'],
-        ['view', 'entity'],
-      ];
-      // @ts-ignore
-      const queryOptions = new URLSearchParams(options || defaultOptions).toString();
-      const url = `/loans/${guid}?${queryOptions}`;
-      const fetchOptions: RequestInit = {
-        method: 'PATCH',
-        body: JSON.stringify(loanData),
-      };
-      await this.fetchWithRetry(url, fetchOptions, { isNotJson: true });
-    },
-    /**
-     * If the contract is not known, one can be generated before updating. The update data is expected as key value pairs (the key being the field ID), and all standard Encompass values are placed in the `standardFields` key, while all custom fields are placed in the `customFields` key.
-     *
-     *  ```typescript
-     *  const updateData: UpdateLoanWithGenerateContract = {
-     *    standardFields: {
-     *      '4000': 'new borrower last name',
-     *      '317': 'new loan officer name',
-     *    },
-     *    customFields: {
-     *      'CX.SOME.CUSTOM.FIELD': 'new value',
-     *    },
-     *  };
-     *
-     *  await encompass.loans.updateWithGeneratedContract('some-loan-guild', updateData);
-     *  ```
-     *
-     *  The `updateWithGeneratedContract()` method can also take the third `LoanUpdateOptions` as well.
-     *  Keep in mind this method requires an extra call to generate the contract, and `loans.update()` should be used instead when possible.
-     */
-    updateWithGeneratedContract: async (
-      guid: string,
-      loanData: UpdateLoanWithGenerateContract,
-      options?: LoanUpdateOptions,
-    ): Promise<void> => {
-      const { customFields, standardFields } = loanData;
-      const massagedCustomFields = massageCustomFields(customFields);
-      const generatedContract: Promise<any> = await this.schemas.generateContract(standardFields);
-      const generatedLoanData = { ...generatedContract, customFields: massagedCustomFields };
-      await this.loans.update(guid, generatedLoanData, options);
-    },
-    /**
-     * Deletes the loan that matches the provided GUID.
-     */
-    delete: async (guid: string): Promise<void> => {
-      await this.fetchWithRetry(
-        `/loans/${guid}`,
-        { method: 'DELETE' },
-        { isNotJson: true },
-      );
-    },
-  }
-
-  /**
-   * A collection of methods when working with milestones and associates.
-   */
-  milestones = {
-    /**
-     * Returns the response of the Get All Milestone endpoints for the provided GUID.
-     */
-    get: async (guid: string): Promise<any[]> => {
-      const milestones: any[] = await this.fetchWithRetry(`/loans/${guid}/milestones`);
-      return milestones;
-    },
-    /**
-      * Assigns a loan associate to a milestone. The associate ID provided must be of a user who fits the persona group for that milestone.
-      *
-      * ```typescript
-      *  const guidToUpdate: string = 'some-loan-guid';
-      *  const assignUnderwriterOptions: AssignMilestoneOptions = {
-      *    loanGuid: guidToUpdate,
-      *    milestone: 'Underwriting',
-      *    userId: 'UnderwritersId',
-      *  };
-      *
-      *  await encompass.milestones.assign(assignUnderwriterOptions);
-      *  ```
-      */
-    assign: async ({
-      milestone,
-      userId,
-      loanGuid,
-    }: AssignMilestoneOptions): Promise<void> => {
-      const milestoneData = await this.milestones.get(loanGuid);
-      const matchingMilestone = milestoneData
-        .find(({ milestoneName }) => milestone === milestoneName);
-      if (!matchingMilestone) {
-        throw new Error(`No milestone found for loan ${loanGuid} matching name "${milestone}"`);
-      }
-      const { id } = matchingMilestone;
-      const fetchOptions = {
-        method: 'PUT',
-        body: JSON.stringify({
-          loanAssociateType: 'User',
-          id: userId,
-        }),
-      };
-      await this.fetchWithRetry(`/loans/${loanGuid}/associates/${id}`, fetchOptions, { isNotJson: true });
-    },
-    /**
-      *  Updates the matching milestone for the loan guid provided. The `options` key will be added to the body of the call, and the optional `action` key can be used to finish or unfinish a milestone.
-      *
-      *  ```typescript
-      *  const updateProcessingOptions: UpdateMilestoneOptions = {
-      *    loanGuid: guidToUpdate,
-      *    milestone: 'Processing',
-      *    options: {
-      *      comments: 'this milestone is complete!',
-      *    }
-      *    action: 'finish',
-      *  };
-      *
-      *  await encompass.milestones.update(updateProcessingOptions);
-      *  ```
-      */
-    update: async ({
-      loanGuid,
-      milestone,
-      options,
-      action,
-    }: UpdateMilestoneOptions): Promise<void> => {
-      const milestoneData = await this.milestones.get(loanGuid);
-      const matchingMilestone = milestoneData
-        .find(({ milestoneName }) => milestone === milestoneName);
-      if (!matchingMilestone) {
-        throw new Error(`No milestone found for loan ${loanGuid} matching name "${milestone}"`);
-      }
-      const { id } = matchingMilestone;
-      const fetchOptions = {
-        method: 'PATCH',
-        body: JSON.stringify(options),
-      };
-      const uri = `/loans/${loanGuid}/milestones/${id}${action ? `?action=${action}` : ''}`;
-      await this.fetchWithRetry(uri, fetchOptions, { isNotJson: true });
-    },
   }
 }
 

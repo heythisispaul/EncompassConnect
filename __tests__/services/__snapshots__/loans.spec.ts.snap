@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loans delete makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "DELETE",
+  },
+]
+`;
+
+exports[`loans get makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>",
+  Object {
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+  },
+]
+`;
+
+exports[`loans update makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>?appendData=false&persistent=transient&view=entity",
+  Object {
+    "body": "{\\"applications\\":[{\\"id\\":\\"borrower_1\\",\\"borrower\\":{\\"firstName\\":\\"Todd\\",\\"lastName\\":\\"Chavez\\"}}]}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "PATCH",
+  },
+]
+`;
+
+exports[`loans updateWithGeneratedContract makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>?appendData=false&persistent=transient&view=entity",
+  Object {
+    "body": "{\\"testContract\\":\\"<GENERATE CONTRACT RESPONSE>\\",\\"customFields\\":[{\\"fieldName\\":\\"CX.TEST.FIELD\\",\\"stringValue\\":\\"test value\\"}]}",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "PATCH",
+  },
+]
+`;
