@@ -29,7 +29,7 @@ export interface PipeLineTerms {
 
 export interface PipeLineFilter {
   operator: 'and' | 'or';
-  terms: PipeLineTerms[];
+  terms: (PipeLineFilter | PipeLineTerms)[];
 }
 
 export interface FilterPipeLineContract extends PipeLineRequest {
