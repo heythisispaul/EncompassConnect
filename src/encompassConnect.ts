@@ -130,7 +130,12 @@ class EncompassConnect {
     options: RequestInit = {},
     customOptions: InternalRequestOptions = {},
   ): Promise<any> {
-    const { isRetry, isNotJson, version } = customOptions;
+    const {
+      isRetry,
+      isNotJson,
+      version,
+      useTruncatedBase,
+    } = customOptions;
     const shouldRetry = !isRetry && this.username && this.#password;
     const failedAuthError = new Error(
       `Token invalid. ${!isRetry && shouldRetry ? 'Will reattempt with new token' : 'Unable to get updated one.'}`,
@@ -139,7 +144,10 @@ class EncompassConnect {
       if (!this.#token) {
         await this.getToken();
       }
-      const url = `${this.base}/v${version || this.version}${path}`;
+      const url = useTruncatedBase
+        ? `${this.authBase}${path}`
+        : `${this.base}/v${version || this.version}${path}`;
+
       const optionsWithToken: RequestInit = {
         ...options,
         headers: this.withTokenHeader(options.headers),
@@ -355,7 +363,7 @@ class EncompassConnect {
     * ```
     */
   async request(url: string, options: RequestInit): Promise<Response> {
-    const response = await this.fetchWithRetry(url, options, { isNotJson: true });
+    const response = await this.fetchWithRetry(url, options, { isNotJson: true, useTruncatedBase: true });
     return response;
   }
 }

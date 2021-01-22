@@ -246,10 +246,11 @@ await encompass.milestones.update(updateProcessingOptions);
 ```
 
 ### The Request Method
-If an API is not available through an explicit method in this class, the `request()` method will act as a fetch wrapper around any Encompass API call you want to make and return the response. It takes in the same arguments as any [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) API, with the exception that the first argument is appended as a path to the Encompass API domain.
+If an API is not available through an explicit method in this class, the `request()` method will act as a fetch wrapper around any Encompass API call you want to make and return the response. It takes in the same arguments as any [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) API, with the exception that the first argument is appended as a path to the Encompass API domain, currently `https://api.elliemae.com/`.
+
 ```typescript
 // hitting the Get Custom Fields API:
-const customFieldsResponse: Response = await encompass.request('/settings/loan/customFields');
+const customFieldsResponse: Response = await encompass.request('/encompass/v1/settings/loan/customFields');
 const data = await customFieldsResponse.json();
 console.log(data);
 
@@ -262,7 +263,7 @@ const options: RequestInit = {
   },
 };
 
-await encompass.request('/businessContacts/<some-contact-id>', options);
+await encompass.request('/encompass/v1/businessContacts/<some-contact-id>', options);
 ```
 
 Checkout the [documentation site](https://heythisispaul.github.io/EncompassConnect/classes/encompassconnectclass.encompassconnect.html) for all available methods and other examples.
