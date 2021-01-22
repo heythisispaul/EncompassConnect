@@ -125,6 +125,7 @@ export interface InternalRequestOptions {
   isRetry?: boolean;
   isNotJson?: boolean;
   version?: number;
+  useTruncatedBase?: boolean;
 }
 
 export interface AssignMilestoneOptions {

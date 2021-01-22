@@ -65,7 +65,7 @@ Array [
 
 exports[`EncompassConnect request fetches with the correct information 1`] = `
 Array [
-  "https://api.elliemae.com/encompass/v1test/url",
+  "https://api.elliemae.comtest/url",
   Object {
     "body": "{\\"some\\":\\"value\\"}",
     "headers": Object {
