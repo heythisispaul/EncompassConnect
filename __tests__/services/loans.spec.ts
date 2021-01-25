@@ -103,4 +103,27 @@ describe('loans', () => {
       matchesFetchSnapshot('loans.delete', mockGuid)
     ));
   });
+
+  describe('fieldReader', () => {
+    const fields = ['4000', '4002'];
+    const fieldReaderResponse = [
+      { fieldId: 'field1', value: 'value 1' },
+      { fieldId: 'field2', value: 'value 2' },
+    ];
+
+    it('makes the API call with the correct information', async () => (
+      matchesFetchSnapshot('loans.fieldReader', mockGuid, fields)
+    ));
+
+    it('appends the query string if the includeMetadata flag is set to true', async () => (
+      matchesFetchSnapshot('loans.fieldReader', mockGuid, fields, { includeMetadata: true })
+    ));
+
+    it(' calls the reduceFieldReaderValues side effect if the mapResponse key is true', async () => {
+      mockResponse(fieldReaderResponse);
+      const result = await testInstanceWithToken.loans
+        .fieldReader(mockGuid, fields, { mapResponse: true });
+      expect(result).toEqual({ field1: 'value 1', field2: 'value 2' });
+    });
+  });
 });

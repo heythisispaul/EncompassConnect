@@ -1,4 +1,4 @@
-import { massageCustomFields, objectToURLString } from '../src/utils';
+import { massageCustomFields, objectToURLString, reduceFieldReaderValues } from '../src/utils';
 
 describe('utils', () => {
   describe('massageCustomFields', () => {
@@ -50,6 +50,24 @@ describe('utils', () => {
     it('prepends a "?" if the queryString parameter is provided', () => {
       const result = objectToURLString(input, true);
       expect(result).toEqual(`?${expectedOutput}`);
+    });
+  });
+
+  describe('reduceFieldReaderValues', () => {
+    const input = [
+      { fieldId: 'field1', value: 'value1' },
+      { fieldId: 'field2', value: 'value2' },
+    ];
+    it('returns an object', () => {
+      expect(typeof reduceFieldReaderValues(input)).toEqual('object');
+    });
+
+    it('has a key value pair for each fieldId/value', () => {
+      const reducedResult = reduceFieldReaderValues(input);
+      expect(reducedResult).toEqual({
+        field1: 'value1',
+        field2: 'value2',
+      });
     });
   });
 });

@@ -12,6 +12,32 @@ Array [
 ]
 `;
 
+exports[`loans fieldReader appends the query string if the includeMetadata flag is set to true 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/fieldReader?includeMetadata=true",
+  Object {
+    "body": "[\\"4000\\",\\"4002\\"]",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
+exports[`loans fieldReader makes the API call with the correct information 1`] = `
+Array [
+  "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>/fieldReader",
+  Object {
+    "body": "[\\"4000\\",\\"4002\\"]",
+    "headers": Object {
+      "Authorization": "Bearer <MOCK TOKEN VALUE>",
+    },
+    "method": "POST",
+  },
+]
+`;
+
 exports[`loans get makes the API call with the correct information 1`] = `
 Array [
   "https://api.elliemae.com/encompass/v1/loans/<MOCK GUID VALUE>",

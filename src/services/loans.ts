@@ -4,8 +4,9 @@ import EncompassService from './service';
 import {
   LoanUpdateOptions,
   UpdateLoanWithGenerateContract,
+  FieldReaderResult,
 } from '../types';
-import { massageCustomFields, objectToURLString } from '../utils';
+import { massageCustomFields, objectToURLString, reduceFieldReaderValues } from '../utils';
 
 class LoansService extends EncompassService {
   /**
@@ -130,6 +131,32 @@ class LoansService extends EncompassService {
       { method: 'DELETE' },
       { isNotJson: true },
     );
+  }
+
+  /**
+   * Takes in a loan guid and an array of field names, and returns the result of the 'Loan: Field Reader' result. The third argument is an optional object that
+   * contains two configuration options:
+   *  1. `includeMetadata` - setting this to `true` will include the metadata keys on each fieldReader object in the response
+   *  2. `mapResponse` - setting this to `true` will reduce the return value to a single object with each key being the field ID, and its value the field's value (as a string).
+   *
+   * ```typescript
+   * const fieldValues = await encompass.loans.fieldReader('some-loan-guid', ['4000', '4002'], {
+   *  includeMetadata: true,
+   *  mapResponse: false,
+   * });
+   * ```
+   */
+  async fieldReader(
+    guid: string,
+    fields: string[],
+    { mapResponse, includeMetadata }: { mapResponse?: boolean, includeMetadata?: boolean } = {},
+  ): Promise<FieldReaderResult[] | { [key: string]: string }> {
+    const query = includeMetadata ? '?includeMetadata=true' : '';
+    const fieldValueArray: FieldReaderResult[] = await this.context.fetchWithRetry(
+      `/loans/${guid}/fieldReader${query}`,
+      { method: 'POST', body: JSON.stringify(fields) },
+    );
+    return mapResponse ? reduceFieldReaderValues(fieldValueArray) : fieldValueArray;
   }
 }
 

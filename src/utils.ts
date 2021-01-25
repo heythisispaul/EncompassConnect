@@ -1,3 +1,5 @@
+import { FieldReaderResult } from './types';
+
 export const massageCustomFields = (customFields: any) => {
   if (!customFields) {
     return [];
@@ -22,3 +24,11 @@ export const objectToURLString = (input: any, queryString?: boolean): string => 
   const result = input ? new URLSearchParams(input).toString() : '';
   return queryString ? `?${result}` : result;
 };
+
+export const reduceFieldReaderValues = (fieldReaderResult: FieldReaderResult[]) => fieldReaderResult
+  .reduce((acc, curr) => {
+    const { fieldId, value } = curr;
+    // @ts-ignore
+    acc[fieldId] = value;
+    return acc;
+  }, {});

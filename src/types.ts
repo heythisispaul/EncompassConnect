@@ -202,3 +202,12 @@ export interface ListOfUsersOptions {
   start?: number;
   limit?: number;
 }
+
+export interface FieldReaderResult {
+  fieldId: string;
+  value: string;
+  format?: string;
+  readOnly?: boolean;
+  description?: string;
+  type?: string;
+}
