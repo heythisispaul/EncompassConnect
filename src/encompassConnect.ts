@@ -18,6 +18,7 @@ import {
   BatchUpdateStatus,
   BatchUpdate,
   TokenIntrospection,
+  OnAuthenticate,
 } from './types';
 import {
   LoanService,
@@ -82,12 +83,18 @@ class EncompassConnect {
    */
   version: number;
 
+  /**
+   * The User provided hook to be invoked when a token is not yet set.
+   */
+  onAuthenticate: OnAuthenticate | undefined;
+
   constructor({
     clientId,
     APIsecret,
     instanceId,
     username,
     password,
+    onAuthenticate,
     version = 1,
   }: EncompassConnectInitOptions) {
     this.#clientId = clientId;
@@ -97,6 +104,7 @@ class EncompassConnect {
     this.#token = '';
     this.username = username || '';
     this.version = version;
+    this.onAuthenticate = onAuthenticate;
     this.base = 'https://api.elliemae.com/encompass';
     this.authBase = 'https://api.elliemae.com';
     this.loans = new LoanService(this);
@@ -142,7 +150,11 @@ class EncompassConnect {
     );
     try {
       if (!this.#token) {
-        await this.getToken();
+        if (this.onAuthenticate) {
+          await this.onAuthenticate(this);
+        } else {
+          await this.getTokenWithCredentials();
+        }
       }
       const url = useTruncatedBase
         ? `${this.authBase}${path}`
@@ -173,10 +185,17 @@ class EncompassConnect {
   }
 
   /**
+   * Returns the token that is stored in the instance.
+   */
+  getToken() {
+    return this.#token;
+  }
+
+  /**
    * Exchanges the provided username and password for a bearer token and stores it to the `#token` property of the instance.
    * If no username and password are provided, it will fallback to the username and password values provided to the constructor.
    */
-  async getToken(username?: string, password?: string): Promise<void> {
+  async getTokenWithCredentials(username?: string, password?: string): Promise<void> {
     const body: string = objectToURLString({
       grant_type: 'password',
       username: `${username || this.username}@encompass:${this.#instanceId}`,
@@ -362,7 +381,7 @@ class EncompassConnect {
     * await encompass.request('/businessContacts/<some-contact-id>', options);
     * ```
     */
-  async request(url: string, options: RequestInit): Promise<Response> {
+  async request(url: string, options?: RequestInit): Promise<Response> {
     const response = await this.fetchWithRetry(url, options, { isNotJson: true, useTruncatedBase: true });
     return response;
   }

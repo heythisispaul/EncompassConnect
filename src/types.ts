@@ -2,10 +2,15 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 
+import EncompassConnect from './encompassConnect';
+
 /**
  * @packageDocumentation
  * @module Interfaces
  */
+
+export type OnAuthenticate = (encompassConnect: EncompassConnect) => Promise<void>;
+
 export interface SortOrderContract {
   canonicalName: string;
   order: 'asc' | 'desc';
@@ -119,6 +124,7 @@ export interface EncompassConnectInitOptions {
   username?: string;
   password?: string;
   version?: number;
+  onAuthenticate?: OnAuthenticate;
 }
 
 export interface InternalRequestOptions {

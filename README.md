@@ -31,7 +31,7 @@ If you provide a username and password in the constructor (as done in the Gettin
 Before attempting to access a resource for the first time, these credentials will be used to fetch a token. This token will be reused until a `401` response is received from Encompass - at that time these credentials will be re-exchanged for a new token, and the failed request will be resent with the fresh token. If another `401` is returned at that time, an error will be thrown.
 
 ### Providing Credentials to a Get Token Request
-If instead you want to exchange username and password for a single token, a token can be retrieved by calling the `getToken()` method to retrieve a token. Once this token expires it will be released, or can be overwritten at any time by calling `setToken()` to a different value.
+If instead you want to exchange username and password for a single token, a token can be retrieved by calling the `getTokenWithCredentials()` method to retrieve a token. Once this token expires it will be released, or can be overwritten at any time by calling `setToken()` to a different value.
 ```typescript
 import EncompassConnect, { EncompassConnectInitOptions } from 'encompassconnect';
 
@@ -43,7 +43,7 @@ const constructorValues: EncompassConnectInitOptions = {
 
 const encompass = new EncompassConnect(constructorValues);
 
-await encompass.getToken('mycoolusername', 'mycoolpassword');
+await encompass.getTokenWithCredentials('mycoolusername', 'mycoolpassword');
 
 const canonicalFields = await encompass.getCanonicalNames();
 console.log(canonicalFields);
@@ -71,6 +71,34 @@ console.log(canonicalFields);
 ```
 
 This token will be stored to the instance until either a new value is set with the `setToken()` method, or until a `401` is returned from the Encompass API. Be sure to set the token before making any resource requests.
+
+### Customizing the Authentication Flow
+If instead of exchanging the credentials provided in the constructor for a token, you'd like to perform some custom action, you can provide an `onAuthenticate` function in the constructor. This function will be called instead of the standard `encompass.getTokenFromCredentials()` function, and will be invoked with your instance of encompass connect.
+
+```typescript
+import EncompassConnect, { EncompassConnectInitOptions } from 'encompassconnect';
+import aCustomTokenFetchingAction from './some-file';
+
+const constructorValues: EncompassConnectInitOptions = {
+  clientId: '<Client ID>',
+  APIsecret: '<API Secret>',
+  instanceId: '<Instance ID>',
+  onAuthenticate: async (encompass: EncompassConnect) => {
+    console.log('I will be invoked on construction and any time there is an auth failure.');
+    const token = await aCustomTokenFetchingAction();
+    if (token) {
+      encompass.setToken(token);
+    } else {
+      await encompass.getTokenFromCredentials();
+    }
+  },
+}
+
+const encompass = new EncompassConnect(constructorValues);
+
+const canonicalFields = await encompass.getCanonicalNames();
+console.log(canonicalFields);
+```
 
 ## Examples
 

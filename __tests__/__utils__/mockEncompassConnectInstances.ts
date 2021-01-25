@@ -13,7 +13,12 @@ export const defaultCreds = {
 };
 export const mockToken = '<MOCK TOKEN VALUE>';
 export const mockGuid = '<MOCK GUID VALUE>';
+export const mockOnAuthenticate = jest.fn();
 export const testInstance = new EncompassConnect(createConstructor());
 export const testInstanceWithCreds = new EncompassConnect(createConstructor(defaultCreds));
 export const testInstanceWithToken = new EncompassConnect(createConstructor(defaultCreds));
+export const testInstanceWithOnAuth = new EncompassConnect(createConstructor({
+  ...defaultCreds,
+  onAuthenticate: mockOnAuthenticate,
+}));
 testInstanceWithToken.setToken(mockToken);
