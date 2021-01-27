@@ -18,7 +18,7 @@ import {
   BatchUpdateStatus,
   BatchUpdate,
   TokenIntrospection,
-  OnAuthenticate,
+  AuthenticationHook,
 } from './types';
 import {
   LoanService,
@@ -86,7 +86,9 @@ class EncompassConnect {
   /**
    * The User provided hook to be invoked when a token is not yet set.
    */
-  onAuthenticate: OnAuthenticate | undefined;
+  onAuthenticate: AuthenticationHook | undefined;
+
+  onAuthenticateFailure: AuthenticationHook | undefined;
 
   constructor({
     clientId,
@@ -95,6 +97,7 @@ class EncompassConnect {
     username,
     password,
     onAuthenticate,
+    onAuthenticateFailure,
     version = 1,
   }: EncompassConnectInitOptions) {
     this.#clientId = clientId;
@@ -105,6 +108,7 @@ class EncompassConnect {
     this.username = username || '';
     this.version = version;
     this.onAuthenticate = onAuthenticate;
+    this.onAuthenticateFailure = onAuthenticateFailure;
     this.base = 'https://api.elliemae.com/encompass';
     this.authBase = 'https://api.elliemae.com';
     this.loans = new LoanService(this);
@@ -128,6 +132,23 @@ class EncompassConnect {
       ...headers,
       Authorization: `Bearer ${this.#token}`,
     };
+  }
+
+  /**
+   * @ignore
+   */
+  private async handleAuthFailure() {
+    if (this.onAuthenticateFailure) {
+      // try catch needed here to prevent an uncaught promise exception.
+      // eslint-disable-next-line no-useless-catch
+      try {
+        await this.onAuthenticateFailure(this);
+      } catch (error) {
+        throw error;
+      }
+    } else {
+      this.setToken(null);
+    }
   }
 
   /**
@@ -174,7 +195,7 @@ class EncompassConnect {
       return isNotJson ? response : await response.json();
     } catch (error) {
       if (shouldRetry && error === failedAuthError) {
-        this.setToken(null);
+        await this.handleAuthFailure();
         return this.fetchWithRetry(path, options, {
           ...customOptions,
           isRetry: true,

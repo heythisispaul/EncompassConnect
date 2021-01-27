@@ -95,9 +95,40 @@ const constructorValues: EncompassConnectInitOptions = {
 }
 
 const encompass = new EncompassConnect(constructorValues);
+```
 
-const canonicalFields = await encompass.getCanonicalNames();
-console.log(canonicalFields);
+If you need to perform a side effect in the event of a failed authentication, you can do so by providing an `onAuthenticateFailure` function to the constructor. This function will be called after an unauthorized response is received, but before the reauthorization flow occurs. This method has the same signature as the `onAuthenticate` hook, it will be called with your instance and returns a promise that resolves to void. To avoid an unresolved promise error, both functions are called within try/catch blocks, so there is no need to include it in your function declaration unless you want to control the error handling for your own needs.
+
+```typescript
+import EncompassConnect, { EncompassConnectInitOptions } from 'encompassconnect';
+import tellSomethingItFailed from './some-file';
+
+const constructorValues: EncompassConnectInitOptions = {
+  clientId: '<Client ID>',
+  APIsecret: '<API Secret>',
+  instanceId: '<Instance ID>',
+  onAuthenticateFailure: async (encompass: EncompassConnect) => {
+    console.log('The token used was not valid!');
+    await tellSomethingItFailed();
+    encompass.setToken(null);
+  },
+}
+
+const encompass = new EncompassConnect(constructorValues);
+```
+
+Leaving these authentication hook values empty is functionally the same as:
+
+```typescript
+import EncompassConnect, { EncompassConnectInitOptions } from 'encompassconnect';
+
+const constructorValues: EncompassConnectInitOptions = {
+  // ...your other contructor values
+  onAuthenticate: async (encompass: EncompassConnect) => encompass.getTokenFromCredentials(),
+  onAuthenticateFailure: async (encompass: EncompassConnect) => encompass.setToken(null),
+}
+
+const encompass = new EncompassConnect(constructorValues);
 ```
 
 ## Examples

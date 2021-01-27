@@ -9,7 +9,7 @@ import EncompassConnect from './encompassConnect';
  * @module Interfaces
  */
 
-export type OnAuthenticate = (encompassConnect: EncompassConnect) => Promise<void>;
+export type AuthenticationHook = (encompassConnect: EncompassConnect) => Promise<void>;
 
 export interface SortOrderContract {
   canonicalName: string;
@@ -124,7 +124,8 @@ export interface EncompassConnectInitOptions {
   username?: string;
   password?: string;
   version?: number;
-  onAuthenticate?: OnAuthenticate;
+  onAuthenticate?: AuthenticationHook;
+  onAuthenticateFailure?: AuthenticationHook;
 }
 
 export interface InternalRequestOptions {

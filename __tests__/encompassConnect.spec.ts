@@ -16,6 +16,7 @@ import {
   defaultCreds,
   createConstructor,
   mockOnAuthenticate,
+  mockOnAuthenticateFailure,
 } from './__utils__/mockEncompassConnectInstances';
 import {
   returnsResponseBody,
@@ -29,6 +30,7 @@ describe('EncompassConnect', () => {
     fetch.mockReset();
     mockResponseJson.mockReset();
     mockOnAuthenticate.mockReset();
+    mockOnAuthenticateFailure.mockReset();
   });
 
   describe('getTokenWithCredentials', () => {
@@ -244,6 +246,26 @@ describe('EncompassConnect', () => {
       mockResponseTimes(3);
       await testInstanceWithOnAuth.request('someurl');
       expect(mockOnAuthenticate).toHaveBeenCalled();
+    });
+
+    it('calls the onAuthFailure function if provided', async () => {
+      mockResponse({}, 401);
+      mockResponseTimes(2);
+      await testInstanceWithOnAuth.request('someurl');
+      expect(mockOnAuthenticateFailure).toHaveBeenCalled();
+    });
+
+    it('will throw the resolved error of the onAuthFailure if it errors', async () => {
+      mockResponse({}, 401);
+      mockResponseTimes(2);
+      const errorFromAuthHookFailure = new Error('uh oh');
+      mockOnAuthenticateFailure.mockImplementationOnce(() => new Promise((resolve, reject) => {
+        reject(errorFromAuthHookFailure);
+      }));
+
+      expect(async () => {
+        await testInstanceWithOnAuth.request('someurl');
+      }).rejects.toEqual(errorFromAuthHookFailure);
     });
   });
 });
